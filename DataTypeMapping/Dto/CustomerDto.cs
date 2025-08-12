@@ -1,4 +1,6 @@
-﻿namespace DataTypeMapping.Dto
+﻿using DataTypeMapping.Model;
+
+namespace DataTypeMapping.Dto
 {
     public class CustomerDto
     {
@@ -9,6 +11,6 @@
         public AddressDto Address { get; set; }
         public ShipmentDto ShipmentDetails { get; set; }
         public OrderItemDto[] OrderItems { get; set; }
-        public OrderStatus Status { get; set; }
+        public string Status { get; set; }
     }
 }

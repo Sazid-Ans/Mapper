@@ -1,4 +1,4 @@
-﻿namespace DataTypeMapping.Dto
+﻿namespace DataTypeMapping.Model.Enum
 {
     public enum Category
     {
