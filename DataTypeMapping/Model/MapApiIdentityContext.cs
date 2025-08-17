@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace DataTypeMapping.Model
 {
-    public class MapApiIdentityContext : IdentityDbContext
+    public class MapApiIdentityContext : IdentityDbContext<Customer>
     {
         public MapApiIdentityContext(DbContextOptions<MapApiIdentityContext> options) : base(options)
         {

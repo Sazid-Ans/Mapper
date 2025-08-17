@@ -6,6 +6,7 @@
         public string SKU { get; set; }
         public int Quantity { get; set; }
         public Money UnitPrice { get; set; }
+
         // Each line = one product
         public int ProductId { get; set; }
         public Product Product { get; set; }

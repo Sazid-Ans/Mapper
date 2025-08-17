@@ -8,10 +8,11 @@ namespace DataTypeMapping.Model
         public Guid Id { get; set; }
 
         // Foreign key
-        public int CustomerId { get; set; }
+        // Foreign key only (no navigation to Customer here)
+        public string CustomerId { get; set; }  // must match IdentityUser's key type (string)
 
-        [ForeignKey(nameof(CustomerId))]
-        public Customer Customer { get; set; }
+        //[ForeignKey(nameof(CustomerId))]
+        //public Customer Customer { get; set; }
         public List<OrderLine> Items { get; set; }
         public Shipment Shipment { get; set; }
         public DateTime CreatedDate { get; set; }

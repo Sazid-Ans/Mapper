@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataTypeMapping.Migrations
 {
     [DbContext(typeof(MapApiDbContext))]
-    [Migration("20250817054703_Added payment entity")]
-    partial class Addedpaymententity
+    [Migration("20250817074825_Initial migration")]
+    partial class Initialmigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,69 +25,6 @@ namespace DataTypeMapping.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DataTypeMapping.Model.Address", b =>
-                {
-                    b.Property<int>("AddressID")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AddressID"));
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Line1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Line2")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("AddressID");
-
-                    b.ToTable("Address");
-                });
-
-            modelBuilder.Entity("DataTypeMapping.Model.Customer", b =>
-                {
-                    b.Property<int>("CustomerId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CustomerId"));
-
-                    b.Property<int>("AddressID")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("CustomerId");
-
-                    b.HasIndex("AddressID");
-
-                    b.ToTable("Customers");
-                });
-
             modelBuilder.Entity("DataTypeMapping.Model.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -97,15 +34,14 @@ namespace DataTypeMapping.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("CustomerId")
-                        .HasColumnType("int");
+                    b.Property<string>("CustomerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CustomerId");
 
                     b.ToTable("Orders");
                 });
@@ -169,7 +105,7 @@ namespace DataTypeMapping.Migrations
                     b.HasIndex("OrderId")
                         .IsUnique();
 
-                    b.ToTable("Payment");
+                    b.ToTable("Payments");
                 });
 
             modelBuilder.Entity("DataTypeMapping.Model.Product", b =>
@@ -225,25 +161,8 @@ namespace DataTypeMapping.Migrations
                     b.ToTable("Shipments");
                 });
 
-            modelBuilder.Entity("DataTypeMapping.Model.Customer", b =>
-                {
-                    b.HasOne("DataTypeMapping.Model.Address", "Address")
-                        .WithMany("Customers")
-                        .HasForeignKey("AddressID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Address");
-                });
-
             modelBuilder.Entity("DataTypeMapping.Model.Order", b =>
                 {
-                    b.HasOne("DataTypeMapping.Model.Customer", "Customer")
-                        .WithMany("Orders")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.OwnsOne("DataTypeMapping.Model.Money", "Total", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
@@ -266,8 +185,6 @@ namespace DataTypeMapping.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
                         });
-
-                    b.Navigation("Customer");
 
                     b.Navigation("Total")
                         .IsRequired();
@@ -343,7 +260,7 @@ namespace DataTypeMapping.Migrations
 
                             b1.HasKey("PaymentId");
 
-                            b1.ToTable("Payment");
+                            b1.ToTable("Payments");
 
                             b1.WithOwner()
                                 .HasForeignKey("PaymentId");
@@ -393,16 +310,6 @@ namespace DataTypeMapping.Migrations
                         .IsRequired();
 
                     b.Navigation("Order");
-                });
-
-            modelBuilder.Entity("DataTypeMapping.Model.Address", b =>
-                {
-                    b.Navigation("Customers");
-                });
-
-            modelBuilder.Entity("DataTypeMapping.Model.Customer", b =>
-                {
-                    b.Navigation("Orders");
                 });
 
             modelBuilder.Entity("DataTypeMapping.Model.Order", b =>

@@ -18,7 +18,7 @@ builder.Services.AddDbContext<MapApiDbContext>(options => options.UseSqlServer(c
 builder.Services.AddDbContext<MapApiIdentityContext>(options =>
     options.UseSqlServer(conn["MapperApiIdentityDb"]));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>().AddEntityFrameworkStores<MapApiIdentityContext>()
+builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<MapApiIdentityContext>()
     .AddDefaultTokenProviders();
 
 var app = builder.Build();
