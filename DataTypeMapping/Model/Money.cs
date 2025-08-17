@@ -2,7 +2,16 @@
 {
     public class Money
     {
-            public decimal Amount { get; set; }
-            public string Currency { get; set; } // Assume "USD" unless specified
+        public Money(decimal discountPrice, string currency) 
+        {
+            Amount = discountPrice;
+            Currency = currency;
+        }
+        public Money()
+        {
+            
+        }
+        public decimal Amount { get; set; }
+        public string Currency { get; set; } // Assume "USD" unless specified
     }
 }

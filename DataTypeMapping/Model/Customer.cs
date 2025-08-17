@@ -11,10 +11,8 @@ namespace DataTypeMapping.Model
         [EmailAddress]
         public string Email { get; set; }
         public string Phone { get; set; }
-        public Address Address { get; set; }
-        public Shipment LastShipment { get; set; }
-        public List<OrderLine> PreviousOrders { get; set; }
+        public Address Address { get; set; }  //default convention for FK
+        public List<Order> Orders{ get; set; }
 
-        public OrderSataus orderSataus { get; set; }
     }
 }
