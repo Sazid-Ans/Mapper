@@ -1,16 +1,21 @@
 ﻿using DataTypeMapping.Model;
+using System.ComponentModel.DataAnnotations;
 
 namespace DataTypeMapping.Dto
 {
     public class CustomerDto
     {
-        public int Id { get; set; }
+        [Required(ErrorMessage ="Name is Required")]
         public string Name { get; set; }
+
+        [Required(ErrorMessage ="Email cannot be empty")]
         public string Email { get; set; }
+
+        [Required(ErrorMessage ="password cannot be empty")]
+        [MinLength(12)]
+        public string Password { get; set; }
         public string PhoneNumber { get; set; }
         public AddressDto Address { get; set; }
-        public ShipmentDto ShipmentDetails { get; set; }
-        public OrderItemDto[] OrderItems { get; set; }
-        public string Status { get; set; }
+
     }
 }

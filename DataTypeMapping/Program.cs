@@ -1,6 +1,8 @@
 using DataTypeMapping.Model;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +11,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+
 var conn = builder.Configuration.GetSection("ConnectionStrings");
 
 //Db context for Api
@@ -21,12 +25,19 @@ builder.Services.AddDbContext<MapApiIdentityContext>(options =>
 builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<MapApiIdentityContext>()
     .AddDefaultTokenProviders();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("My API")
+            .WithTheme(ScalarTheme.Saturn); // optional (Dark mode);
+    });
 }
 
 app.UseHttpsRedirection();
