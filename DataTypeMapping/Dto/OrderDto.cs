@@ -1,4 +1,6 @@
-﻿namespace DataTypeMapping.Dto
+﻿using DataTypeMapping.Model;
+
+namespace DataTypeMapping.Dto
 {
     public class OrderDto
     {
@@ -7,7 +9,6 @@
         public List<OrderItemDto> orderItems { get; set; }
         public ShipmentDto shipment { get; set; }
         public string orderDate { get; set; }
-        public  OrderStatus orderStatus { get; set; }
         public decimal totalAmount { get; set; }
 
 

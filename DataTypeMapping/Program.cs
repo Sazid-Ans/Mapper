@@ -1,3 +1,7 @@
+using DataTypeMapping.Model;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -5,6 +9,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+var conn = builder.Configuration.GetSection("ConnectionStrings");
+
+//Db context for Api
+builder.Services.AddDbContext<MapApiDbContext>(options => options.UseSqlServer(conn["MapperApiDb"]));
+
+//Db Context for Identity
+builder.Services.AddDbContext<MapApiIdentityContext>(options =>
+    options.UseSqlServer(conn["MapperApiIdentityDb"]));
+
+builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<MapApiIdentityContext>()
+    .AddDefaultTokenProviders();
 
 var app = builder.Build();
 
