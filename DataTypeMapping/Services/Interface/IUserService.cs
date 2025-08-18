@@ -1,12 +1,13 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
+using DataTypeMapping.Model.Customs;
+using Microsoft.AspNetCore.Identity;
 
 namespace DataTypeMapping.Services.Interface
 {
     public interface IUserService
     {
-        Task<CustomerDto> GetCustomer(string email);
-        Task Register(Customer customer);
-
+        Task<IdentityOperationResult> RegisterAsync(CustomerDto customerDto);
+        Task<IdentityOperationResult> CreateRoleAsync(string roleName);
     }
 }

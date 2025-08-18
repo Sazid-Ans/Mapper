@@ -1,9 +1,11 @@
 ﻿
+using Microsoft.AspNetCore.Identity;
+
 namespace DataTypeMapping.Services.Interface
 {
     public interface IUserCheckService
     {
-        Task<bool> IsUserRegistered(string userEmail);
-        Task<bool> IsPasswordCorrecrt(string userEmail, string password);
+        Task<bool> IsUserRegisteredAsync(string userEmail);
+        Task<bool> IsPasswordCorrectAsync(string userEmail, string password);
     }
 }

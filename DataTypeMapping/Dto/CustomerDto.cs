@@ -1,4 +1,5 @@
 ﻿using DataTypeMapping.Model;
+using DataTypeMapping.Model.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace DataTypeMapping.Dto
@@ -10,6 +11,7 @@ namespace DataTypeMapping.Dto
 
         [Required(ErrorMessage ="Email cannot be empty")]
         public string Email { get; set; }
+        public Role Role { get; set; }
 
         [Required(ErrorMessage ="password cannot be empty")]
         [MinLength(12)]
