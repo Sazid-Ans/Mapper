@@ -11,7 +11,7 @@ namespace DataTypeMapping.Dto
 
         [Required(ErrorMessage ="Email cannot be empty")]
         public string Email { get; set; }
-        public Role Role { get; set; }
+        public string Role { get; set; }
 
         [Required(ErrorMessage ="password cannot be empty")]
         [MinLength(12)]

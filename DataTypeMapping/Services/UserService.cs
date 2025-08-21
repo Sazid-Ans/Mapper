@@ -51,21 +51,32 @@ namespace DataTypeMapping.Services
                     return IdentityOperationResult.Failed(userCreateResult);
                 }
 
-                // Step 2: Ensure role exists
-                var roleResult = await CreateRoleAsync(customerDto.Role.ToString());
+                if (!RoleDto.Roles.Contains(customerDto.Role))
+                {
+                    return IdentityOperationResult.Failed(
+                        IdentityResult.Failed(new IdentityError
+                        {
+                            Code = "InvalidRole",
+                            Description = "The specified role is not valid."
+                        })
+                    );
+                }
+
+                // Step 2: Ensure role exists, if not, create it
+                var roleResult = await CreateRoleAsync(customerDto.Role);
                 if (!roleResult.IdentityResult.Succeeded)
                 {
                     return IdentityOperationResult.Failed(roleResult.IdentityResult);
                 }
 
                 // Step 3: Add user to role
-                var roleAddResult = await _userManager.AddToRoleAsync(customer, customerDto.Role.ToString());
+                var roleAddResult = await _userManager.AddToRoleAsync(customer, customerDto.Role);
                 if (!roleAddResult.Succeeded)
                 {
                     return IdentityOperationResult.Failed(roleAddResult);
                 }
 
-                // ✅ Everything succeeded
+                //verything succeeded
                 return IdentityOperationResult.Created();
             }
             catch (Exception ex)
@@ -80,7 +91,6 @@ namespace DataTypeMapping.Services
                 );
             }
         }
-
 
         public async Task<IdentityOperationResult> CreateRoleAsync(string roleName) 
         {

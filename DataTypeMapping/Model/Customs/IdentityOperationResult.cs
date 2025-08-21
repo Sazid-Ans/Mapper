@@ -21,13 +21,12 @@ namespace DataTypeMapping.Model.Customs
 
         public static IdentityOperationResult Failed(IdentityResult identityResult)
         {
-          return new IdentityOperationResult(identityResult , false);
+          return new IdentityOperationResult(identityResult, false);
         }
 
         public static IdentityOperationResult AlreadyExists()
         {
             return new IdentityOperationResult (IdentityResult.Success , false);
         }
-
     }
 }

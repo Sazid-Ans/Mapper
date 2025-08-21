@@ -1,4 +1,7 @@
 using DataTypeMapping.Model;
+using DataTypeMapping.Services;
+using DataTypeMapping.Services.Interface;
+using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +28,13 @@ builder.Services.AddDbContext<MapApiIdentityContext>(options =>
 builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<MapApiIdentityContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IMailService, MailService>();
+
+
+//Centralized app settings binding.
+builder.Services.AddAppSettings(builder.Configuration);
+
 
 var app = builder.Build();
 
@@ -36,7 +46,7 @@ if (app.Environment.IsDevelopment())
     {
         options
             .WithTitle("My API")
-            .WithTheme(ScalarTheme.Saturn); // optional (Dark mode);
+            .WithTheme(ScalarTheme.Default); // optional (Dark mode);
     });
 }
 
