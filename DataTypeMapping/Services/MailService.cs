@@ -1,15 +1,23 @@
-﻿using MimeKit;
+﻿using DataTypeMapping.Model;
+using DataTypeMapping.Services.Interface;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using DataTypeMapping.Services.Interface;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
-using DataTypeMapping.Utilities.AppSettingsDO;
+using Microsoft.Extensions.Options;
+using MimeKit;
 
 namespace DataTypeMapping.Services
 {
     public class MailService : IMailService
     {
-        MailSettings mailSettings = new MailSettings();
+        // MailSettings mailSettings = new MailSettings(); // if we create new object then thn it will be null.
+        private readonly MailSettings mailSettings;
+
+        public MailService(IOptions<MailSettings> options)
+        {
+            this.mailSettings = options.Value;
+        }
+
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             try
@@ -44,7 +52,6 @@ namespace DataTypeMapping.Services
                 }
                 return smtpClient; // caller disposes
             
-            return smtpClient;
         }
 
         public async Task<MimeMessage> CreateMimeMessagesAsync(string toEmail, string subject, string body, string ccEmail = "")

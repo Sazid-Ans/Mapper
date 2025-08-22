@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using DataTypeMapping.Model;
+using System.Runtime.CompilerServices;
 
 namespace DataTypeMapping.Utilities.AppSettingsDO
 {
@@ -11,7 +12,7 @@ namespace DataTypeMapping.Utilities.AppSettingsDO
             // Add more settings as needed:
             // services.Configure<DbSettings>(configuration.GetSection("DbSettings"));
             // services.Configure<CacheSettings>(configuration.GetSection("CacheSettings"));
-
+            
             return services;
         }
     }

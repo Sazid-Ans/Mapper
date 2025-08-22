@@ -13,9 +13,11 @@ namespace DataTypeMapping.Controllers
     public class IdentityController : ControllerBase
     {
         public readonly IUserService _userService;
-        public IdentityController(IUserService userService)
+        public readonly IMailService _mailService;
+        public IdentityController(IUserService userService, IMailService mailService)
         {
             _userService = userService;
+            _mailService = mailService;
         }
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterUser([FromBody] CustomerDto customerDto) 
@@ -26,23 +28,37 @@ namespace DataTypeMapping.Controllers
             }
             try
             {
+                string message = "";
                 var result = await _userService.RegisterAsync(customerDto);
+                IActionResult response;
+
                 if (!result.IdentityResult.Succeeded)
                 {
-                    return BadRequest(BaseResponse<CustomerDto>
-                        .Failure(result.IdentityResult.Errors.Select(e => e.Description).ToList(), "User registration failed."));
+                    message = $"User registration failed.";
+                    response = BadRequest(BaseResponse<CustomerDto>
+                        .Failure(result.IdentityResult.Errors.Select(e => e.Description).ToList(), message));
                 }
                 else if (result.WasCreated)
                 {
-                    return Ok(BaseResponse<CustomerDto>
+                    message = $"User registration Success username:{customerDto.Email}";
+                     response = Ok(BaseResponse<CustomerDto>
                         .Success(customerDto, "User registered successfully."));
-
                 }
                 else
                 {
-                    return Conflict(BaseResponse<CustomerDto>
+                    message = $"user already exists, user registraion failed. Name: {customerDto.Name}, Username: {customerDto.Email}";
+                    response = Conflict(BaseResponse<CustomerDto>
                         .Failure(new List<string> { "User already exists." }, "User registration failed."));
                 }
+                try
+                {
+                    await _mailService.SendEmailAsync(customerDto.Email, "Registration Status", message);
+                }
+                catch (Exception ex) 
+                {
+                    throw new Exception(message, ex);
+                }
+                return response;
             }
             catch (Exception ex)
             {
