@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace DataTypeMapping.Model.DbContext
+namespace DataTypeMapping.Model.Context
 {
     public class MapApiIdentityContext : IdentityDbContext<Customer>
     {

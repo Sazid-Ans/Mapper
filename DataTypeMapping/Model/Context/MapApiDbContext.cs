@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace DataTypeMapping.Model.DbContext
+namespace DataTypeMapping.Model.Context
 {
-    public class MapApiDbContext : DbContext
+    public class MapApiDbContext : Microsoft.EntityFrameworkCore.DbContext
     {
         public MapApiDbContext(DbContextOptions<MapApiDbContext> options)
             : base(options)

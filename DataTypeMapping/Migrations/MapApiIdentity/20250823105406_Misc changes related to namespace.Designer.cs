@@ -4,6 +4,7 @@ using DataTypeMapping.Model.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataTypeMapping.Migrations.MapApiIdentity
 {
     [DbContext(typeof(MapApiIdentityContext))]
-    partial class MapApiIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20250823105406_Misc changes related to namespace")]
+    partial class Miscchangesrelatedtonamespace
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

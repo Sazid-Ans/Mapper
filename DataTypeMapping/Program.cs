@@ -1,5 +1,5 @@
 using DataTypeMapping.Model;
-using DataTypeMapping.Model.DbContext;
+using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities.AppSettingsDO;
