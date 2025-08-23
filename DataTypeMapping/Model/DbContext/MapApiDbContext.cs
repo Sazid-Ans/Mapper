@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace DataTypeMapping.Model
+namespace DataTypeMapping.Model.DbContext
 {
     public class MapApiDbContext : DbContext
     {

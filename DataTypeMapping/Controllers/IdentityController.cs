@@ -38,7 +38,7 @@ namespace DataTypeMapping.Controllers
                     response = BadRequest(BaseResponse<CustomerDto>
                         .Failure(result.IdentityResult.Errors.Select(e => e.Description).ToList(), message));
                 }
-                else if (result.WasCreated)
+                else if (result.Ok)
                 {
                     message = $"User registration Success username:{customerDto.Email}";
                      response = Ok(BaseResponse<CustomerDto>
@@ -69,5 +69,49 @@ namespace DataTypeMapping.Controllers
                 ));
             }
         } 
+
+        [HttpPost("Login")]
+        public async Task<IActionResult> Login(string userName, string passWord)
+        {
+            if(string.IsNullOrWhiteSpace(userName) || string.IsNullOrWhiteSpace(passWord))
+            {
+                return BadRequest(
+                    BaseResponse<object>.
+                    Failure(new List<string> { "Username and password must be provided." }, "Invalid input.")
+                    );
+            }
+            try 
+            {
+               var loginResult =await _userService.LoginAsync(userName, passWord);
+                if (!loginResult.IdentityResult.Succeeded &&
+                      loginResult.IdentityResult.Errors.Any(e => e.Code.Contains("UserNotFound")))
+                {
+                    return NotFound(
+                        BaseResponse<object>.Failure(
+                            loginResult.IdentityResult.Errors.Select(e => e.Description).ToList(),
+                            "login failed."
+                        ));
+                }
+                if (!loginResult.IdentityResult.Succeeded)
+                {
+                    return Unauthorized(
+                        BaseResponse<object>.
+                        Failure(loginResult.IdentityResult.Errors.Select(e => e.Description).ToList(), "Login failed.")
+                        );
+                }
+                return Ok(
+                    BaseResponse<object>.
+                    Success(null, "Login successful.")
+                    );
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                BaseResponse<object>.Failure(
+                    new List<string> { ex.Message },
+                    "An error occurred during login."
+                ));
+            }
+        }
     }
 }

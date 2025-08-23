@@ -9,5 +9,6 @@ namespace DataTypeMapping.Services.Interface
     {
         Task<IdentityOperationResult> RegisterAsync(CustomerDto customerDto);
         Task<IdentityOperationResult> CreateRoleAsync(string roleName);
+        Task<IdentityOperationResult> LoginAsync(string userName, string password);
     }
 }

@@ -5,16 +5,16 @@ namespace DataTypeMapping.Model.Customs
     public class IdentityOperationResult
     {
         public IdentityResult IdentityResult { get; }
-        public bool WasCreated { get; }
+        public bool Ok { get; }
 
-        private IdentityOperationResult(IdentityResult identityResult , bool wasCreated)
+        private IdentityOperationResult(IdentityResult identityResult , bool ok)
         {
             IdentityResult = identityResult;
-            WasCreated = wasCreated;
+            Ok = ok;
         }
 
         //factory methods to keep the B.L clean
-        public static IdentityOperationResult Created() 
+        public static IdentityOperationResult Success() 
         {
             return new IdentityOperationResult(IdentityResult.Success , true);
         }
@@ -24,7 +24,7 @@ namespace DataTypeMapping.Model.Customs
           return new IdentityOperationResult(identityResult, false);
         }
 
-        public static IdentityOperationResult AlreadyExists()
+        public static IdentityOperationResult Ambiguous()
         {
             return new IdentityOperationResult (IdentityResult.Success , false);
         }

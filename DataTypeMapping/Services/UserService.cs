@@ -1,6 +1,7 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
 using DataTypeMapping.Model.Customs;
+using DataTypeMapping.Model.Enum;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Identity;
@@ -12,12 +13,13 @@ namespace DataTypeMapping.Services
     {
         public readonly UserManager<Customer> _userManager;
         public readonly RoleManager<IdentityRole> _roleManager;
-       
+       public readonly SignInManager<Customer> _signInManager;
 
-        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager)
+        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager, SignInManager<Customer> signInManager)
         {
             _userManager = userManager;
             _roleManager = roleManager;
+            _signInManager = signInManager;
         }
 
         public async Task<bool> IsPasswordCorrectAsync(string userEmail , string password)
@@ -39,7 +41,7 @@ namespace DataTypeMapping.Services
             // Check if user already exists
             if (await IsUserRegisteredAsync(customerDto.Email))
             {
-                return IdentityOperationResult.AlreadyExists();
+                return IdentityOperationResult.Ambiguous();
             }
 
             try
@@ -49,17 +51,6 @@ namespace DataTypeMapping.Services
                 if (!userCreateResult.Succeeded)
                 {
                     return IdentityOperationResult.Failed(userCreateResult);
-                }
-
-                if (!RoleDto.Roles.Contains(customerDto.Role))
-                {
-                    return IdentityOperationResult.Failed(
-                        IdentityResult.Failed(new IdentityError
-                        {
-                            Code = "InvalidRole",
-                            Description = "The specified role is not valid."
-                        })
-                    );
                 }
 
                 // Step 2: Ensure role exists, if not, create it
@@ -77,7 +68,7 @@ namespace DataTypeMapping.Services
                 }
 
                 //verything succeeded
-                return IdentityOperationResult.Created();
+                return IdentityOperationResult.Success();
             }
             catch (Exception ex)
             {
@@ -85,25 +76,55 @@ namespace DataTypeMapping.Services
                 return IdentityOperationResult.Failed(
                     IdentityResult.Failed(new IdentityError
                     {
-                        Code = "RegisterException",
+                        Code = "RegistrationException",
                         Description = "An unexpected error occurred during registration."
                     })
                 );
             }
         }
 
+        public async Task<IdentityOperationResult> LoginAsync(string userName, string password) 
+        {
+            IdentityResult identityresult;
+            bool isUserRegistered = await IsUserRegisteredAsync(userName);
+            if (!isUserRegistered) 
+            {
+             identityresult = IdentityResult.Failed(
+                    new IdentityError
+                    {
+                        Code = "UserNotFound",
+                        Description = "User not found."
+                    });
+                return IdentityOperationResult.Failed(identityresult);
+            }
+           
+           var signInResult = await  _signInManager.CheckPasswordSignInAsync(await _userManager.FindByEmailAsync(userName), password, false);
+           if(!signInResult.Succeeded) 
+           {
+               identityresult = IdentityResult.Failed(
+                   new IdentityError
+                   {
+                       Code = "Incorrect password",
+                       Description = "Incorrect password, Retry"
+                   });
+               return IdentityOperationResult.Failed(identityresult);
+           }
+            return IdentityOperationResult.Success();
+        }
+
         public async Task<IdentityOperationResult> CreateRoleAsync(string roleName) 
         {
             IdentityResult identityResult;
-            if (string.IsNullOrWhiteSpace(roleName)) 
+            bool checkRoleName = RoleDto.Roles.Contains(roleName);
+            if (!checkRoleName) 
             {
-                identityResult = IdentityResult.Failed(
-                    new IdentityError
+              return IdentityOperationResult.Failed(
+                    IdentityResult.Failed(new IdentityError
                     {
-                        Code = "EmptyRoleName",
-                        Description = "Role name is required."
-                    });
-                return  IdentityOperationResult.Failed(identityResult);
+                        Code = IdentityErrorCode.InvalidRole.ToString(),
+                        Description = "The specified role is not valid."
+                    })
+              );
             }
             bool roleExist = await _roleManager.RoleExistsAsync(roleName);
 
@@ -115,10 +136,11 @@ namespace DataTypeMapping.Services
                     var result =  await _roleManager.CreateAsync(role);
                     if (!result.Succeeded) 
                     {
-                        identityResult = IdentityResult.Failed(result.Errors.ToArray());
+                        identityResult = IdentityResult.Failed(
+                            new IdentityError { Code = IdentityErrorCode.Unknown.ToString(), Description = result.Errors.FirstOrDefault().Description});
                         return IdentityOperationResult.Failed(identityResult);
                     }
-                    return IdentityOperationResult.Created();
+                    return IdentityOperationResult.Success();
                 }
                 catch (Exception ex) 
                 {
@@ -131,7 +153,7 @@ namespace DataTypeMapping.Services
                     return IdentityOperationResult.Failed(identityResult);
                 }
             }
-            return IdentityOperationResult.AlreadyExists();
+            return IdentityOperationResult.Ambiguous();
         }
     }
 }
