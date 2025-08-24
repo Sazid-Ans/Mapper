@@ -42,5 +42,15 @@ namespace DataTypeMapping.Utilities
                 },
             };
         }
+        public static TokenDto MapToTokenDto(Customer customer, IList<string> roles = null, IDictionary<string, string> customClaims = null)
+        {
+            return new TokenDto
+            {
+                UserId = customer.Id,
+                UserName = customer.UserName,
+                Roles = roles,
+                CustomClaims = customClaims
+            };
+        }
     }
 }

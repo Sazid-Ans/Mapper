@@ -5,6 +5,7 @@ using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DataTypeMapping.Controllers
 {
@@ -12,12 +13,15 @@ namespace DataTypeMapping.Controllers
     [ApiController]
     public class IdentityController : ControllerBase
     {
-        public readonly IUserService _userService;
-        public readonly IMailService _mailService;
-        public IdentityController(IUserService userService, IMailService mailService)
+        private readonly IUserService _userService;
+        private readonly IMailService _mailService;
+        private readonly IJwtService _jwtService;
+
+        public IdentityController(IUserService userService, IMailService mailService, IJwtService jwtService)
         {
             _userService = userService;
             _mailService = mailService;
+            _jwtService = jwtService;
         }
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterUser([FromBody] CustomerDto customerDto) 
@@ -30,26 +34,15 @@ namespace DataTypeMapping.Controllers
             {
                 string message = "";
                 var result = await _userService.RegisterAsync(customerDto);
-                IActionResult response;
 
-                if (!result.IdentityResult.Succeeded)
+                if (!result.Succeeded)
                 {
-                    message = $"User registration failed.";
-                    response = BadRequest(BaseResponse<CustomerDto>
-                        .Failure(result.IdentityResult.Errors.Select(e => e.Description).ToList(), message));
+                    message = result.Errors.Select(e => e.Code).FirstOrDefault();
+                    return BadRequest(BaseResponse<CustomerDto>
+                        .Failure(result.Errors.Select(e => e.Description).ToList(), message));
                 }
-                else if (result.Ok)
-                {
-                    message = $"User registration Success username:{customerDto.Email}";
-                     response = Ok(BaseResponse<CustomerDto>
-                        .Success(customerDto, "User registered successfully."));
-                }
-                else
-                {
-                    message = $"user already exists, user registraion failed. Name: {customerDto.Name}, Username: {customerDto.Email}";
-                    response = Conflict(BaseResponse<CustomerDto>
-                        .Failure(new List<string> { "User already exists." }, "User registration failed."));
-                }
+                
+                message = $"User registration Success username:{customerDto.Email}";
                 try
                 {
                     await _mailService.SendEmailAsync(customerDto.Email, "Registration Status", message);
@@ -58,7 +51,8 @@ namespace DataTypeMapping.Controllers
                 {
                     throw new Exception(message, ex);
                 }
-                return response;
+                return Ok(BaseResponse<object>
+                        .Success(new { userName = customerDto.Email }, "User registered successfully."));
             }
             catch (Exception ex)
             {
@@ -82,26 +76,26 @@ namespace DataTypeMapping.Controllers
             }
             try 
             {
-               var loginResult =await _userService.LoginAsync(userName, passWord);
-                if (!loginResult.IdentityResult.Succeeded &&
-                      loginResult.IdentityResult.Errors.Any(e => e.Code.Contains("UserNotFound")))
+               var (loginResult,cust,token) =await _userService.LoginAndGetTokenAsync(userName, passWord);
+                if (!loginResult.Succeeded &&
+                      loginResult.Errors.Any(e => e.Code.Contains("UserNotFound")))
                 {
                     return NotFound(
                         BaseResponse<object>.Failure(
-                            loginResult.IdentityResult.Errors.Select(e => e.Description).ToList(),
+                            loginResult.Errors.Select(e => e.Description).ToList(),
                             "login failed."
                         ));
                 }
-                if (!loginResult.IdentityResult.Succeeded)
+                if (!loginResult.Succeeded && loginResult.Errors.Any(e=>e.Code.Contains("Incorrect password")))
                 {
                     return Unauthorized(
                         BaseResponse<object>.
-                        Failure(loginResult.IdentityResult.Errors.Select(e => e.Description).ToList(), "Login failed.")
+                        Failure(loginResult.Errors.Select(e => e.Description).ToList(), "Login failed.")
                         );
                 }
                 return Ok(
                     BaseResponse<object>.
-                    Success(null, "Login successful.")
+                    Success(new { JwtToken = token }, "Login successful.")
                     );
             }
             catch(Exception ex)

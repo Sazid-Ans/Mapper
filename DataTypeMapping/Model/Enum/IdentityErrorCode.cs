@@ -14,6 +14,7 @@
 
         UserAlreadyExists = 8,
         InvalidInput = 9,
-        Unauthorized = 10
+        Unauthorized = 10,
+        InternalServerError =11
     }
 }

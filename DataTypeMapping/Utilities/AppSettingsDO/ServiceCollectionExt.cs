@@ -1,5 +1,4 @@
-﻿using DataTypeMapping.Model;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 
 namespace DataTypeMapping.Utilities.AppSettingsDO
 {
@@ -9,10 +8,11 @@ namespace DataTypeMapping.Utilities.AppSettingsDO
         public static IServiceCollection AddAppSettings(this IServiceCollection services, IConfiguration configuration)
         {
             services.Configure<MailSettings>(configuration.GetSection("MailSettings"));
+            services.Configure<JwtSettings>(configuration.GetSection("JWTSettings"));
             // Add more settings as needed:
             // services.Configure<DbSettings>(configuration.GetSection("DbSettings"));
             // services.Configure<CacheSettings>(configuration.GetSection("CacheSettings"));
-            
+
             return services;
         }
     }

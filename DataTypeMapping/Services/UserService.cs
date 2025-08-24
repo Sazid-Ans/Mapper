@@ -1,6 +1,6 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
-using DataTypeMapping.Model.Customs;
+using DataTypeMapping.Model.Context;
 using DataTypeMapping.Model.Enum;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
@@ -13,13 +13,17 @@ namespace DataTypeMapping.Services
     {
         public readonly UserManager<Customer> _userManager;
         public readonly RoleManager<IdentityRole> _roleManager;
-       public readonly SignInManager<Customer> _signInManager;
+        public readonly SignInManager<Customer> _signInManager;
+        public readonly IJwtService _jwtService;
+        public readonly MapApiDbContext _dbContext;
 
-        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager, SignInManager<Customer> signInManager)
+        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager, SignInManager<Customer> signInManager, IJwtService jwtService, MapApiDbContext dbContext)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
+            _jwtService = jwtService;
+            _dbContext = dbContext;
         }
 
         public async Task<bool> IsPasswordCorrectAsync(string userEmail , string password)
@@ -28,66 +32,94 @@ namespace DataTypeMapping.Services
             return  await _userManager.CheckPasswordAsync(user, password);
         }
 
-        public async Task<bool> IsUserRegisteredAsync(string userEmail)
+        public async Task<(bool, Customer)> IsUserRegisteredAsync(string userEmail)
         {
             var user = await _userManager.FindByEmailAsync(userEmail);
-            return user != null;
+            return (user != null, user);
         }
 
-        public async Task<IdentityOperationResult> RegisterAsync(CustomerDto customerDto)
+        public async Task<IdentityResult> RegisterAsync(CustomerDto customerDto)
         {
-            var customer = Mapper.MapToCustomer(customerDto);
+            var identityResult = new IdentityResult();
 
-            // Check if user already exists
-            if (await IsUserRegisteredAsync(customerDto.Email))
+            // 1. Check if user already exists
+            var (isRegistered, user) = await IsUserRegisteredAsync(customerDto.Email);
+            if (isRegistered && user != null)
             {
-                return IdentityOperationResult.Ambiguous();
+                 identityResult = IdentityResult.Failed(
+                    new IdentityError
+                    {
+                        Code = IdentityErrorCode.UserAlreadyExists.ToString(),
+                        Description = "A user with this email already exists."
+                    });
+                return identityResult;
             }
 
+            // 2. Validate roles
+            var rolesToAssign = customerDto.Roles.Distinct().ToList();
+            var checkRolesExists = rolesToAssign.All(r => RoleDto.Roles.Contains(r,StringComparer.OrdinalIgnoreCase));
+            if(!checkRolesExists) 
+            {
+                identityResult = IdentityResult.Failed(
+                   new IdentityError
+                   {
+                       Code = IdentityErrorCode.InvalidRole.ToString(),
+                       Description = "One or more specified roles are invalid."
+                   });
+                return identityResult;
+            }
+            var customer = Mapper.MapToCustomer(customerDto);
+
+            // 4. Start Transaction (EF Core style)
+            using var transaction = _dbContext.Database.BeginTransaction();
             try
             {
-                // Step 1: Create user
+                // 5. Create User
                 var userCreateResult = await _userManager.CreateAsync(customer, customerDto.Password);
                 if (!userCreateResult.Succeeded)
                 {
-                    return IdentityOperationResult.Failed(userCreateResult);
+                    identityResult = IdentityResult.Failed(
+                        new IdentityError
+                        {
+                            Code = "UserCreationFailed",
+                            Description = userCreateResult.Errors.FirstOrDefault()?.Description
+                        });
+                    return identityResult;
                 }
 
-                // Step 2: Ensure role exists, if not, create it
-                var roleResult = await CreateRoleAsync(customerDto.Role);
-                if (!roleResult.IdentityResult.Succeeded)
+                // 6. Assign Roles
+                if (rolesToAssign.Any())
                 {
-                    return IdentityOperationResult.Failed(roleResult.IdentityResult);
+                    var roleResult = await _userManager.AddToRolesAsync(customer, rolesToAssign);
+                    if (!roleResult.Succeeded)
+                    {
+                        await transaction.RollbackAsync();
+                        return roleResult;
+                    }
                 }
 
-                // Step 3: Add user to role
-                var roleAddResult = await _userManager.AddToRoleAsync(customer, customerDto.Role);
-                if (!roleAddResult.Succeeded)
-                {
-                    return IdentityOperationResult.Failed(roleAddResult);
-                }
-
-                //verything succeeded
-                return IdentityOperationResult.Success();
+                // 7. Commit if everything succeeds
+                await transaction.CommitAsync();
+                return IdentityResult.Success;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex); // TODO: replace with Serilog in future
-                return IdentityOperationResult.Failed(
-                    IdentityResult.Failed(new IdentityError
-                    {
-                        Code = "RegistrationException",
-                        Description = "An unexpected error occurred during registration."
-                    })
-                );
+                // Rollback on exception
+                await transaction.RollbackAsync();
+
+                return IdentityResult.Failed(new IdentityError
+                {
+                    Code = IdentityErrorCode.InternalServerError.ToString(),
+                    Description = $"Unexpected error occurred: {ex.Message}"
+                });
             }
         }
 
-        public async Task<IdentityOperationResult> LoginAsync(string userName, string password) 
+        public async Task<(IdentityResult, Customer,string token)> LoginAndGetTokenAsync(string userName, string password) 
         {
             IdentityResult identityresult;
-            bool isUserRegistered = await IsUserRegisteredAsync(userName);
-            if (!isUserRegistered) 
+            var (isUserRegistered, user) = await IsUserRegisteredAsync(userName);
+            if (!isUserRegistered && user == null) 
             {
              identityresult = IdentityResult.Failed(
                     new IdentityError
@@ -95,65 +127,29 @@ namespace DataTypeMapping.Services
                         Code = "UserNotFound",
                         Description = "User not found."
                     });
-                return IdentityOperationResult.Failed(identityresult);
+                return (identityresult, user, null);
             }
            
-           var signInResult = await  _signInManager.CheckPasswordSignInAsync(await _userManager.FindByEmailAsync(userName), password, false);
+           var signInResult = await  _signInManager.CheckPasswordSignInAsync(user, password, false);
            if(!signInResult.Succeeded) 
            {
                identityresult = IdentityResult.Failed(
                    new IdentityError
                    {
                        Code = "Incorrect password",
-                       Description = "Incorrect password, Retry"
+                       Description = "Incorrect password, Please Retry"
                    });
-               return IdentityOperationResult.Failed(identityresult);
+               return (identityresult,null, null);
            }
-            return IdentityOperationResult.Success();
+           var tokenDto = new TokenDto
+           {
+               UserId = user.Id,
+               UserName = user.Email,
+               Roles = await _userManager.GetRolesAsync(user)
+           };
+            var token = _jwtService.GenerateToken(tokenDto);
+            return (IdentityResult.Success, user, token);
         }
 
-        public async Task<IdentityOperationResult> CreateRoleAsync(string roleName) 
-        {
-            IdentityResult identityResult;
-            bool checkRoleName = RoleDto.Roles.Contains(roleName);
-            if (!checkRoleName) 
-            {
-              return IdentityOperationResult.Failed(
-                    IdentityResult.Failed(new IdentityError
-                    {
-                        Code = IdentityErrorCode.InvalidRole.ToString(),
-                        Description = "The specified role is not valid."
-                    })
-              );
-            }
-            bool roleExist = await _roleManager.RoleExistsAsync(roleName);
-
-            if (!roleExist) 
-            {
-                try
-                {
-                   IdentityRole role = new IdentityRole(roleName);
-                    var result =  await _roleManager.CreateAsync(role);
-                    if (!result.Succeeded) 
-                    {
-                        identityResult = IdentityResult.Failed(
-                            new IdentityError { Code = IdentityErrorCode.Unknown.ToString(), Description = result.Errors.FirstOrDefault().Description});
-                        return IdentityOperationResult.Failed(identityResult);
-                    }
-                    return IdentityOperationResult.Success();
-                }
-                catch (Exception ex) 
-                {
-                    Console.WriteLine(ex); //will add serilog in next sprint
-                    identityResult = IdentityResult.Failed(new IdentityError
-                    {
-                        Code = "RoleCreateException",
-                        Description = "An unexpected error occurred while creating the role."
-                    });
-                    return IdentityOperationResult.Failed(identityResult);
-                }
-            }
-            return IdentityOperationResult.Ambiguous();
-        }
     }
 }

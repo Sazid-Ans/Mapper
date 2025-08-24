@@ -1,5 +1,5 @@
-﻿using DataTypeMapping.Model;
-using DataTypeMapping.Services.Interface;
+﻿using DataTypeMapping.Services.Interface;
+using DataTypeMapping.Utilities.AppSettingsDO;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Diagnostics.HealthChecks;

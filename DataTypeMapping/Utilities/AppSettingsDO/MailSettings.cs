@@ -1,6 +1,6 @@
 ﻿using System.Runtime;
 
-namespace DataTypeMapping.Model
+namespace DataTypeMapping.Utilities.AppSettingsDO
 {
     public class MailSettings
     {

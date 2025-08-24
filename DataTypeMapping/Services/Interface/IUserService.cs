@@ -1,14 +1,14 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
-using DataTypeMapping.Model.Customs;
+using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Identity;
 
 namespace DataTypeMapping.Services.Interface
 {
     public interface IUserService
     {
-        Task<IdentityOperationResult> RegisterAsync(CustomerDto customerDto);
-        Task<IdentityOperationResult> CreateRoleAsync(string roleName);
-        Task<IdentityOperationResult> LoginAsync(string userName, string password);
+        Task<IdentityResult> RegisterAsync(CustomerDto customerDto);
+        Task<(IdentityResult,Customer,string token)> LoginAndGetTokenAsync(string userName, string password);
+        //Task<IdentityResult> LogoutAsync(string token);
     }
 }

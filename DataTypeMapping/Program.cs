@@ -31,7 +31,7 @@ builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<
 
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMailService, MailService>();
-
+builder.Services.AddScoped<IJwtService, JwtService>();
 
 //Centralized app settings binding.
 builder.Services.AddAppSettings(builder.Configuration);
