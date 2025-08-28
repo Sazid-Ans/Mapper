@@ -13,13 +13,16 @@ namespace DataTypeMapping.Utilities
                 UserName = customerDto.Name,
                 PhoneNumber = customerDto.PhoneNumber,
                 PasswordHash = customerDto.Password,
-                Address = new Address
+                Addresses = new List<Address> 
                 {
-                    Line1 = customerDto.Address.StreetLine1,
+                 new Address
+                 {
                     Line2 = customerDto.Address.StreetLine2,
+                    Line1 = customerDto.Address.StreetLine1,
                     City = customerDto.Address.City,
                     State = customerDto.Address.State,
                     PostalCode = customerDto.Address.PinCode
+                 }
                 },
             };
         }
@@ -34,11 +37,11 @@ namespace DataTypeMapping.Utilities
                 Password = customer.PasswordHash,
                 Address = new AddressDto
                 {
-                    StreetLine2 = customer.Address.Line2,
-                    StreetLine1 = customer.Address.Line1,
-                    City = customer.Address.City,
-                    State = customer.Address.State,
-                    PinCode = customer.Address.PostalCode
+                    StreetLine2 = customer.Addresses.Select(x=>x.Line2).FirstOrDefault(),
+                    StreetLine1 = customer.Addresses.Select(x=>x.Line1).FirstOrDefault(),
+                    City = customer.Addresses.Select(x => x.City).FirstOrDefault(),
+                    State = customer.Addresses.Select(x => x.State).FirstOrDefault(),
+                    PinCode = customer.Addresses.Select(x => x.PostalCode).FirstOrDefault(),
                 },
             };
         }

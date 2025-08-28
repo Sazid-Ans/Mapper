@@ -1,6 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using DataTypeMapping.Utilities.AppSettingsDO;
+using System.Runtime.CompilerServices;
 
-namespace DataTypeMapping.Utilities.AppSettingsDO
+namespace DataTypeMapping.CustMiddleware
 {
     public static class ServiceCollectionExt
     {

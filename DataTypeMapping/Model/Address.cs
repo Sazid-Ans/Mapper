@@ -8,6 +8,8 @@
         public string City { get; set; }
         public string State { get; set; }
         public string PostalCode { get; set; }
-        public List<Customer> Customers { get; set; }
+
+        public string? CustomerId { get; set; }   // FK, good to give explicitly, though not required
+        public Customer Customer { get; set; }
     }
 }

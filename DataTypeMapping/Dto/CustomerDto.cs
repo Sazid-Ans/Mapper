@@ -18,6 +18,5 @@ namespace DataTypeMapping.Dto
         public string Password { get; set; }
         public string PhoneNumber { get; set; }
         public AddressDto Address { get; set; }
-
     }
 }

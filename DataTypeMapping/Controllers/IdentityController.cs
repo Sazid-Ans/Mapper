@@ -39,7 +39,7 @@ namespace DataTypeMapping.Controllers
                 {
                     message = result.Errors.Select(e => e.Code).FirstOrDefault();
                     return BadRequest(BaseResponse<CustomerDto>
-                        .Failure(result.Errors.Select(e => e.Description).ToList(), message));
+                        .Failure(result.Errors.Select(e => e.Description).ToList()));
                 }
                 
                 message = $"User registration Success username:{customerDto.Email}";
@@ -52,14 +52,13 @@ namespace DataTypeMapping.Controllers
                     throw new Exception(message, ex);
                 }
                 return Ok(BaseResponse<object>
-                        .Success(new { userName = customerDto.Email }, "User registered successfully."));
+                        .Success(new { userName = customerDto.Email}));
             }
             catch (Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                 BaseResponse<CustomerDto>.Failure(
-                    new List<string> { ex.Message },
-                    "An error occurred during registration."
+                    new List<string> { ex.Message }
                 ));
             }
         } 
@@ -71,7 +70,7 @@ namespace DataTypeMapping.Controllers
             {
                 return BadRequest(
                     BaseResponse<object>.
-                    Failure(new List<string> { "Username and password must be provided." }, "Invalid input.")
+                    Failure(new List<string> { "Username and password must be provided." })
                     );
             }
             try 
@@ -82,28 +81,26 @@ namespace DataTypeMapping.Controllers
                 {
                     return NotFound(
                         BaseResponse<object>.Failure(
-                            loginResult.Errors.Select(e => e.Description).ToList(),
-                            "login failed."
+                            loginResult.Errors.Select(e => e.Description).ToList()
                         ));
                 }
                 if (!loginResult.Succeeded && loginResult.Errors.Any(e=>e.Code.Contains("Incorrect password")))
                 {
                     return Unauthorized(
                         BaseResponse<object>.
-                        Failure(loginResult.Errors.Select(e => e.Description).ToList(), "Login failed.")
+                        Failure(loginResult.Errors.Select(e => e.Description).ToList())
                         );
                 }
                 return Ok(
                     BaseResponse<object>.
-                    Success(new { JwtToken = token }, "Login successful.")
+                    Success(new { JwtToken = token })
                     );
             }
             catch(Exception ex)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
                 BaseResponse<object>.Failure(
-                    new List<string> { ex.Message },
-                    "An error occurred during login."
+                    new List<string> { ex.Message }
                 ));
             }
         }

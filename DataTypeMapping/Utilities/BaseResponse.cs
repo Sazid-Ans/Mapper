@@ -2,28 +2,32 @@
 {
     public class BaseResponse<T>
     {
-        public string Message { get; set; }
         public T? Data { get; set; }
-        public List<string> Errors { get; set; } = new List<string>();
-        public bool IsSuccess => Errors.Count == 0;
+        public List<ErrorDetail> Errors { get; set; } = new List<ErrorDetail>();
+        public bool IsSuccess { get; set; }
 
-        public static BaseResponse<T> Success(T data, string message = "Operation completed successfully.")
-        {
+        public static BaseResponse<T> Success(T data)
+        { 
             return new BaseResponse<T>
             {
                 Data = data,
-                Message = message,
-                Errors = new List<string>()
+                IsSuccess = true,
             };
         }
-        public static BaseResponse<T> Failure(List<string> errorMessages, string message = "Operation failed.")
+        public static BaseResponse<T> Failure(List<string> errorMessages)
         {
-            return new BaseResponse<T>
-            {
-                Message = message,
-                Errors = errorMessages,
-                Data = default
-            };
+            var baseResponse = new BaseResponse<T>() ;
+
+            var errorDetail = errorMessages.Select(x => new ErrorDetail { Code = string.Empty, Message = x }) ;
+            baseResponse.Errors.AddRange(errorDetail);
+            baseResponse.IsSuccess = false;
+            return baseResponse;
         }
+    }
+
+    public class ErrorDetail
+    {
+        public string Code { get; set; }
+        public string Message { get; set; }
     }
 }

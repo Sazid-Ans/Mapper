@@ -4,6 +4,7 @@ using DataTypeMapping.Model.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataTypeMapping.Migrations.MapApiIdentity
 {
     [DbContext(typeof(MapApiIdentityContext))]
-    partial class MapApiIdentityContextModelSnapshot : ModelSnapshot
+    [Migration("20250826204323_modified address dbset")]
+    partial class modifiedaddressdbset
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,6 +38,7 @@ namespace DataTypeMapping.Migrations.MapApiIdentity
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("CustomerId")
+                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Line1")
@@ -282,7 +286,9 @@ namespace DataTypeMapping.Migrations.MapApiIdentity
                 {
                     b.HasOne("DataTypeMapping.Model.Customer", "Customer")
                         .WithMany("Addresses")
-                        .HasForeignKey("CustomerId");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Customer");
                 });
