@@ -1,4 +1,5 @@
-﻿using DataTypeMapping.Utilities.AppSettingsDO;
+﻿using DataTypeMapping.Utilities;
+using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -7,7 +8,6 @@ namespace DataTypeMapping.CustMiddleware
 {
     public static class AuthValidationSchemeExt
     {
-
         public static WebApplicationBuilder AuthSchemeExt(this WebApplicationBuilder builder)
         {
             //Dont use the below technique as we have already configured the Ioptions pattern for JwtSettings.
@@ -40,6 +40,33 @@ namespace DataTypeMapping.CustMiddleware
                       ValidateAudience = true,
                       ValidAudience = jwtSettings.Audience,
                       ValidateLifetime = true
+                  };
+
+                  options.Events = new JwtBearerEvents
+                  {
+                      OnChallenge = async context =>
+                      {
+                          // Skip the default response
+                          context.HandleResponse();
+
+                          context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                          context.Response.ContentType = "application/json";
+
+                          var baseResponse = BaseResponse<string>.Failure(
+                              new List<string> { "You are not authorized to access this resource." } , StatusCodes.Status401Unauthorized.ToString());
+
+                          await context.Response.WriteAsJsonAsync(baseResponse);
+                      },
+                      OnForbidden = async context =>
+                      {
+                          context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                          context.Response.ContentType = "application/json";
+
+                          var baseResponse = BaseResponse<string>.Failure(
+                              new List<string> { "You do not have permission to access this resource." }, StatusCodes.Status403Forbidden.ToString());
+
+                          await context.Response.WriteAsJsonAsync(baseResponse);
+                      }
                   };
               });
             return builder;

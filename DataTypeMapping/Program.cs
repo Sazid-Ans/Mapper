@@ -1,3 +1,4 @@
+using AuthServer.PipeLineExt;
 using DataTypeMapping.CustMiddleware;
 using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
@@ -59,6 +60,10 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+//Custom Middleware to handle 401,403 responses., will never override 200,400,500 etc. hence commenting out
+//instead use the OnChallenge event of JwtBearerEvents in AuthSchemeExt method.
+//app.UseMiddleware<CustomAuthResponseMiddleware>();
 
 app.MapControllers();
 
