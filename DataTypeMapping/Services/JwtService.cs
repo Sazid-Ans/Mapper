@@ -49,8 +49,8 @@ namespace DataTypeMapping.Services
             var creds = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256); //Length = 32 chars → 32 bytes = 256 bits
 
             var jwt = new JwtSecurityToken(
-            issuer: _options.Value.SecretKey,
-            audience: _options.Value.SecretKey,
+            issuer: _options.Value.Issuer,
+            audience: _options.Value.Audience,
             claims: claims,
             notBefore: now,
             expires: now.AddMinutes(_options.Value.ExpiryInMinutes),

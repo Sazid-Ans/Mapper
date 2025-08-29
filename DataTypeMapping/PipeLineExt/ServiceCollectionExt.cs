@@ -1,5 +1,4 @@
 ﻿using DataTypeMapping.Utilities.AppSettingsDO;
-using System.Runtime.CompilerServices;
 
 namespace DataTypeMapping.CustMiddleware
 {

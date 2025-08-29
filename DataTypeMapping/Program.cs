@@ -3,9 +3,10 @@ using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services;
 using DataTypeMapping.Services.Interface;
-using Microsoft.AspNetCore.Builder;
+using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -32,12 +33,14 @@ builder.Services.AddIdentity<Customer, IdentityRole>().AddEntityFrameworkStores<
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IAddressService, AddressService>();
 
 //Centralized app settings binding.
 builder.Services.AddAppSettings(builder.Configuration);
 
 //Custom Middleware registration for Token Validation
-builder.Services.AddScoped<TokenValidatorMiddleware>();
+builder.AuthSchemeExt();
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -52,13 +55,10 @@ if (app.Environment.IsDevelopment())
             .WithTheme(ScalarTheme.Default); // optional (Dark mode);
     });
 }
-
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
-
-// Custom Middleware for Token Validation
-app.UseMiddleware<TokenValidatorMiddleware>(); // Use custom middleware BEFORE MVC
 
 app.MapControllers();
 

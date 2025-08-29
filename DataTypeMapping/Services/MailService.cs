@@ -2,7 +2,6 @@
 using DataTypeMapping.Utilities.AppSettingsDO;
 using MailKit.Net.Smtp;
 using MailKit.Security;
-using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
@@ -22,8 +21,8 @@ namespace DataTypeMapping.Services
         {
             try
             {
-                var mimeMessage =await CreateMimeMessagesAsync(toEmail, subject, body);
-                var smtpClient =await CreateSmtpClientAsync(mailSettings.Username, mailSettings.Password);
+                var mimeMessage = await CreateMimeMessagesAsync(toEmail, subject, body);
+                var smtpClient = await CreateSmtpClientAsync(mailSettings.Username, mailSettings.Password);
                 await smtpClient.SendAsync(mimeMessage);
             }
             catch (Exception ex)
