@@ -8,8 +8,8 @@ namespace DataTypeMapping.Services.Interface
     {
         public BaseResponse<Address> GetAddressById(int id);
         public BaseResponse<List<Address>> GetAllAddresses();
-        public BaseResponse<Address> CreateAddress(AddressDto addressDto);
+        public BaseResponse<Address> CreateAddress(AddressDto addressDto,string userId);
         public BaseResponse<Address> UpdateAddress(int id, AddressDto addressDto);
-        public BaseResponse<Address> DeleteAddress(int id);
+        public BaseResponse<AddressDto> DeleteAddress(int id);
     }
 }

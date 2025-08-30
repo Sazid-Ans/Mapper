@@ -1,11 +1,7 @@
 ﻿using DataTypeMapping.Dto;
-using DataTypeMapping.Model;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace DataTypeMapping.Controllers
 {
@@ -15,13 +11,11 @@ namespace DataTypeMapping.Controllers
     {
         private readonly IUserService _userService;
         private readonly IMailService _mailService;
-        private readonly IJwtService _jwtService;
 
-        public IdentityController(IUserService userService, IMailService mailService, IJwtService jwtService)
+        public IdentityController(IUserService userService, IMailService mailService)
         {
             _userService = userService;
             _mailService = mailService;
-            _jwtService = jwtService;
         }
         [HttpPost("Register")]
         public async Task<IActionResult> RegisterUser([FromBody] CustomerDto customerDto) 
@@ -75,7 +69,7 @@ namespace DataTypeMapping.Controllers
             }
             try 
             {
-               var (loginResult,cust,token) =await _userService.LoginAndGetTokenAsync(userName, passWord);
+               var (loginResult,token) =await _userService.LoginAndGetTokenAsync(userName, passWord);
                 if (!loginResult.Succeeded &&
                       loginResult.Errors.Any(e => e.Code.Contains("UserNotFound")))
                 {

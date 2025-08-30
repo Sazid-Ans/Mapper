@@ -2,6 +2,7 @@
 using DataTypeMapping.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DataTypeMapping.Controllers
 {
@@ -20,12 +21,8 @@ namespace DataTypeMapping.Controllers
         [HttpPost("CreateAddress")]
         public IActionResult CreateAddress([FromBody] AddressDto addressDto) 
         {
-            if (!User.Identity.IsAuthenticated) 
-            {
-                return Unauthorized();
-            }
-            
-            var response = _addressService.CreateAddress(addressDto);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // pulled from JWT
+            var response = _addressService.CreateAddress(addressDto,userId);
             if (!response.IsSuccess)
             {
                 return BadRequest(response);
@@ -44,7 +41,7 @@ namespace DataTypeMapping.Controllers
         }
         
         [HttpGet("GetAddressById/{id}")]
-       
+        [AllowAnonymous]
         public IActionResult GetAddressById(int id) 
         {
             //if (!User.Identity.IsAuthenticated)

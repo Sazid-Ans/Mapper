@@ -5,25 +5,26 @@ using DataTypeMapping.Model.Enum;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Identity;
-using System.Threading.Tasks;
 
 namespace DataTypeMapping.Services
 {
-    public class UserService : IUserCheckService, IUserService
+    public class UserService : IUserUtilityService, IUserService
     {
         public readonly UserManager<Customer> _userManager;
         public readonly RoleManager<IdentityRole> _roleManager;
         public readonly SignInManager<Customer> _signInManager;
         public readonly IJwtService _jwtService;
         public readonly MapApiDbContext _dbContext;
+        public readonly IHttpContextAccessor _httpContextAccessor;
 
-        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager, SignInManager<Customer> signInManager, IJwtService jwtService, MapApiDbContext dbContext)
+        public UserService(UserManager<Customer> userManager, RoleManager<IdentityRole> roleManager, SignInManager<Customer> signInManager, IJwtService jwtService, MapApiDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _signInManager = signInManager;
             _jwtService = jwtService;
             _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<bool> IsPasswordCorrectAsync(string userEmail , string password)
@@ -115,7 +116,7 @@ namespace DataTypeMapping.Services
             }
         }
 
-        public async Task<(IdentityResult, Customer,string token)> LoginAndGetTokenAsync(string userName, string password) 
+        public async Task<(IdentityResult,string token)> LoginAndGetTokenAsync(string userName, string password) 
         {
             IdentityResult identityresult;
             var (isUserRegistered, user) = await IsUserRegisteredAsync(userName);
@@ -127,7 +128,7 @@ namespace DataTypeMapping.Services
                         Code = "UserNotFound",
                         Description = "User not found."
                     });
-                return (identityresult, user, null);
+                return (identityresult, string.Empty);
             }
            
            var signInResult = await  _signInManager.CheckPasswordSignInAsync(user, password, false);
@@ -139,7 +140,7 @@ namespace DataTypeMapping.Services
                        Code = "Incorrect password",
                        Description = "Incorrect password, Please Retry"
                    });
-               return (identityresult,null, null);
+               return (identityresult, string.Empty);
            }
            var tokenDto = new TokenDto
            {
@@ -148,8 +149,24 @@ namespace DataTypeMapping.Services
                Roles = await _userManager.GetRolesAsync(user)
            };
             var token = _jwtService.GenerateToken(tokenDto);
-            return (IdentityResult.Success, user, token);
+
+            SaveUser(user);
+
+            return (IdentityResult.Success, token.Data);
         }
 
+        public void  SaveUser(Customer user)
+        {
+            _httpContextAccessor.HttpContext.Items["User"] = user;
+        }
+
+        public Customer FetchUser()
+        {
+            if (_httpContextAccessor.HttpContext.Items.TryGetValue("User", out var userObj) && userObj is Customer user)
+            {
+                return user;
+            }
+            return null;
+        }
     }
 }

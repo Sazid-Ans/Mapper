@@ -1,5 +1,6 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Services.Interface;
+using DataTypeMapping.Utilities;
 using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -14,15 +15,17 @@ namespace DataTypeMapping.Services
         private readonly IOptions<JwtSettings> _options;
         private readonly JwtSecurityTokenHandler _jwtHandler;
         private readonly SymmetricSecurityKey _signingKey;
+        private readonly ITokenService _tokenService;
 
-        public JwtService(IOptions<JwtSettings> options)
+        public JwtService(IOptions<JwtSettings> options, ITokenService tokenService)
         {
             _options = options;
             _jwtHandler = new JwtSecurityTokenHandler();
             _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_options.Value.SecretKey));
+            _tokenService = tokenService;
         }
 
-        public string GenerateToken(TokenDto tokenDto)
+        public BaseResponse<string> GenerateToken(TokenDto tokenDto)
         {
             var now = DateTime.UtcNow;
             var claims = new List<Claim>
@@ -57,8 +60,21 @@ namespace DataTypeMapping.Services
             signingCredentials: creds
             );
 
-            string token = _jwtHandler.WriteToken(jwt);
-            return token;
+            try
+            {
+                string token = _jwtHandler.WriteToken(jwt);
+                if (token != null)
+                {
+                    _tokenService.SaveTokenInCookies(token);
+
+                    return BaseResponse<string>.Success(token);
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error generating token", ex);
+            }
+            return BaseResponse<string>.Failure(new List<string> { "Token generation failed" });
         }
 
         public string? GetClaimFromToken(string token, string claimType)

@@ -35,6 +35,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IMailService, MailService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IAddressService, AddressService>();
+builder.Services.AddScoped<ITokenService, TokenService>();
 
 //Centralized app settings binding.
 builder.Services.AddAppSettings(builder.Configuration);

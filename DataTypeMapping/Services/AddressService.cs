@@ -18,7 +18,7 @@ namespace DataTypeMapping.Services
             _identityContext = identityContext;
         }
 
-        public BaseResponse<Address> CreateAddress(AddressDto addressDto)
+        public BaseResponse<Address> CreateAddress(AddressDto addressDto, string userId)
         {
             if (addressDto  == null) 
             {
@@ -27,6 +27,7 @@ namespace DataTypeMapping.Services
             }
             var address = new Address
             {
+                CustomerId = userId,
                 Line1 = addressDto.StreetLine1,
                 Line2 = addressDto.StreetLine2,
                 City = addressDto.City,
@@ -45,17 +46,17 @@ namespace DataTypeMapping.Services
             }
         }
 
-        public BaseResponse<Address> DeleteAddress(int id)
+        public BaseResponse<AddressDto> DeleteAddress(int id)
         {
-            var addressResponse = GetAddressById(id);
-            var isAdressPresent = addressResponse.Data != null && addressResponse.IsSuccess == true ;   // to check if address exists
+            var address = GetAddressById(id);
+            var isAdressPresent = address.Data != null && address.IsSuccess == true ;   // to check if address exists
             if(!isAdressPresent)
             {
-                return BaseResponse<Address>.Failure(new List<string> { "Address not found" });
+                return BaseResponse<AddressDto>.Failure(new List<string> { "Address not found" });
             }
-            _identityContext.Addresses.Remove(addressResponse.Data);
+            _identityContext.Addresses.Remove(address.Data);
             _identityContext.SaveChanges();
-            return BaseResponse<Address>.Success(null);
+            return BaseResponse<AddressDto>.Success(null);
         }
 
         public BaseResponse<Address> GetAddressById(int id)
@@ -77,24 +78,32 @@ namespace DataTypeMapping.Services
                 return BaseResponse<List<Address>>.Failure(new List<string> { "Address count zero" });
             }
             return BaseResponse<List<Address>>.Success(Addresses);
-        }   
+        }
 
         public BaseResponse<Address> UpdateAddress(int id, AddressDto addressDto)
         {
-            var addressResponse = GetAddressById(id);
-            if (!addressResponse.IsSuccess || addressResponse.Data == null || addressDto == null)
+            var address = GetAddressById(id);
+            if (!address.IsSuccess || address.Data == null || addressDto == null)
             {
                 return BaseResponse<Address>.Failure(new List<string> { "Address or Address data not found" });
             }
-            var address = addressResponse.Data;
-            address.Line1 = addressDto.StreetLine1;
-            address.Line2 = addressDto.StreetLine2;
-            address.City = addressDto.City;
-            address.PostalCode = addressDto.PinCode;
-            address.State = addressDto.State;
-            _identityContext.Addresses.Update(address);
-            _identityContext.SaveChanges();
-           return BaseResponse<Address>.Success(address);
+            try
+            {
+                var AddressEntity = address.Data;
+                AddressEntity.Line1 = addressDto.StreetLine1;
+                AddressEntity.Line2 = addressDto.StreetLine2;
+                AddressEntity.City = addressDto.City;
+                AddressEntity.State = addressDto.State;
+                AddressEntity.PostalCode = addressDto.PinCode;
+
+                _identityContext.Addresses.Update(address.Data);
+                _identityContext.SaveChanges();
+                return BaseResponse<Address>.Success(address.Data);
+            }
+            catch (Exception ex)
+            {
+                return BaseResponse<Address>.Failure(new List<string> { ex.Message });
+            }
         }
     }
 }

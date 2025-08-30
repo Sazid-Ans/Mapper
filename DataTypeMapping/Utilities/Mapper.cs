@@ -55,5 +55,30 @@ namespace DataTypeMapping.Utilities
                 CustomClaims = customClaims
             };
         }
+
+        internal static AddressDto MapToAddressDto(Address? address)
+        {
+            return new AddressDto
+            {
+                StreetLine1 = address?.Line1,
+                StreetLine2 = address?.Line2,
+                City = address?.City,
+                State = address?.State,
+                PinCode = address?.PostalCode
+            };
+        }
+
+        internal static Address mapToAdressEntity(AddressDto? data, int Id)
+        {
+            return new Address
+            {
+                AddressID = Id,
+                Line1 = data?.StreetLine1,
+                Line2 = data?.StreetLine2,
+                City = data?.City,
+                State = data?.State,
+                PostalCode = data?.PinCode
+            };
+        }
     }
 }
