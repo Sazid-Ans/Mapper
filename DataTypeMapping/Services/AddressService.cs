@@ -3,9 +3,6 @@ using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Identity;
-using System.Security.AccessControl;
 
 namespace DataTypeMapping.Services
 {
@@ -70,9 +67,9 @@ namespace DataTypeMapping.Services
             return address != null ? BaseResponse<Address>.Success(address) : BaseResponse<Address>.Failure(new List<string> { "Address not found" });
         }
 
-        public BaseResponse<List<Address>> GetAllAddresses()
+        public BaseResponse<List<Address>> GetAllAddresses(string userID)
         {
-            var Addresses = _identityContext.Addresses.Select(x => x).ToList();
+            var Addresses = _identityContext.Addresses.Where(x => x.CustomerId == userID).ToList();
             if (Addresses == null || Addresses.Count == 0)
             {
                 return BaseResponse<List<Address>>.Failure(new List<string> { "Address count zero" });

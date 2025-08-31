@@ -168,5 +168,57 @@ namespace DataTypeMapping.Services
             }
             return null;
         }
+
+        public async Task<BaseResponse<string>> UpdatePassword(string userEmail, string currentPassword, string newPassword) 
+        { 
+            var (isUserRegistered, user) = await IsUserRegisteredAsync(userEmail);
+            if (!isUserRegistered && user == null)
+            {
+                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+            }
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BaseResponse<string>.Failure(errors);
+            }
+            return BaseResponse<string>.Success("Password updated Successfully");
+
+        }
+
+        public async Task<BaseResponse<string>> ForgotPassword(string userEmail) 
+        {
+            var (isUserRegistered, user) = await IsUserRegisteredAsync(userEmail);
+            if (!isUserRegistered && user == null)
+            {
+                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+            }
+            try
+            {
+                var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+                return BaseResponse<string>.Success(token);
+            }
+            catch (Exception ex) 
+            {
+                return BaseResponse<string>.Failure(new List<string> { ex.Message });
+            }
+        }
+        public async Task<BaseResponse<string>> ResetPassword(string email, string token, string newPassword)
+        {
+            var (isUserRegistered, user) = await IsUserRegisteredAsync(email);
+            if (!isUserRegistered || user == null)
+            {
+                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.Select(e => e.Description).ToList();
+                return BaseResponse<string>.Failure(errors);
+            }
+
+            return BaseResponse<string>.Success("Password reset successfully");
+        }
     }
 }

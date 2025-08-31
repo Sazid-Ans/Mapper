@@ -16,7 +16,7 @@
         }
         public static BaseResponse<T> Failure(List<string> errorMessages, string statusCode = "")
         {
-            var baseResponse = new BaseResponse<T>() ;
+            var baseResponse = new BaseResponse<T>();
 
             var errorDetail = errorMessages.Select(x => new ErrorDetail { Code = statusCode, Message = x }) ;
             baseResponse.Errors.AddRange(errorDetail);

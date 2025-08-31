@@ -1,5 +1,5 @@
-﻿
-using DataTypeMapping.Model;
+﻿using DataTypeMapping.Model;
+using DataTypeMapping.Utilities;
 
 namespace DataTypeMapping.Services.Interface
 {

@@ -1,5 +1,6 @@
 ﻿using DataTypeMapping.Dto;
 using DataTypeMapping.Services.Interface;
+using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -29,9 +30,16 @@ namespace DataTypeMapping.Controllers
             }
             return Ok(response);
         }
-        [HttpDelete("DeleteAddress/{id}")]
+        [HttpDelete("DeleteAddress{id}")]
         public IActionResult DeleteAddress(int id) 
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var addressList = _addressService.GetAllAddresses(userId);
+            var isAddressPresent = addressList.Data != null && addressList.Data.Any(a => a.AddressID == id);
+            if(!isAddressPresent)
+            {
+                return BadRequest(BaseResponse<AddressDto>.Failure(new List<string> {"Address not found"}));
+            }
             var response = _addressService.DeleteAddress(id);
             if (!response.IsSuccess)
             {
@@ -44,16 +52,39 @@ namespace DataTypeMapping.Controllers
         [AllowAnonymous]
         public IActionResult GetAddressById(int id) 
         {
-            //if (!User.Identity.IsAuthenticated)
-            //{
-            //    return Unauthorized();
-            //}
             var response = _addressService.GetAddressById(id);
             if (!response.IsSuccess)
             {
                 return BadRequest(response);
             }
             return Ok(response);
+        }
+
+        [HttpGet("GetAllAddress")]
+        public IActionResult GetAllAddress()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var response = _addressService.GetAllAddresses(userId);
+            if (!response.IsSuccess)
+            {
+                return BadRequest(response);
+            }
+            return Ok(response);
+        }
+
+        [HttpPut("UpdateAddress{id}")]
+        public IActionResult UpdateAddress(int id, [FromBody] AddressDto addressDto)
+        {
+            if(id == 0 || addressDto == null)
+            {
+               return BadRequest(BaseResponse<AddressDto>.Failure(new List<string> {"AddressId or Address null"}));
+            }
+            var Baseresponse = _addressService.UpdateAddress(id, addressDto);
+            if (!Baseresponse.IsSuccess)
+            {
+                return BadRequest(Baseresponse);
+            }
+            return Ok(Baseresponse);
         }
     }
 }
