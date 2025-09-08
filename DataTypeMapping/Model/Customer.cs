@@ -1,11 +1,9 @@
-﻿using DataTypeMapping.Model.Enum;
-using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
 
 namespace DataTypeMapping.Model
 {
     public class Customer : IdentityUser
     {
-        public Address Address { get; set; }  //default convention for FK
+        public List<Address> Addresses { get; set; }  //default convention for FK
     }
 }
