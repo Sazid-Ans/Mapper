@@ -4,17 +4,16 @@ using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services;
 using DataTypeMapping.Services.Interface;
-using DataTypeMapping.Utilities.AppSettingsDO;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddXmlSerializerFormatters();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -40,7 +39,8 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 //Centralized app settings binding.
 builder.Services.AddAppSettings(builder.Configuration);
 
-//Custom Middleware registration for Token Validation
+builder.Services.AddCustomModelValidationResponse();
+//WebAoolication builder extension method for registration for Token Validation
 builder.AuthSchemeExt();
 builder.Services.AddAuthorization();
 

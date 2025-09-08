@@ -7,24 +7,36 @@ namespace DataTypeMapping.Utilities
     {
         public static Customer MapToCustomer(CustomerDto customerDto)
         {
-            return new Customer
+            var customer = new Customer
             {
                 Email = customerDto.Email,
                 UserName = customerDto.Name,
                 PhoneNumber = customerDto.PhoneNumber,
-                PasswordHash = customerDto.Password,
-                Addresses = new List<Address> 
-                {
-                 new Address
-                 {
-                    Line2 = customerDto.Address.StreetLine2,
-                    Line1 = customerDto.Address.StreetLine1,
-                    City = customerDto.Address.City,
-                    State = customerDto.Address.State,
-                    PostalCode = customerDto.Address.PinCode
-                 }
-                },
+                PasswordHash = customerDto.Password
             };
+
+            // Add address only if it's not skipped
+            if (customerDto.Address != null &&
+                !(string.IsNullOrWhiteSpace(customerDto.Address.StreetLine1) &&
+                  string.IsNullOrWhiteSpace(customerDto.Address.StreetLine2) &&
+                  string.IsNullOrWhiteSpace(customerDto.Address.City) &&
+                  string.IsNullOrWhiteSpace(customerDto.Address.State) &&
+                  string.IsNullOrWhiteSpace(customerDto.Address.PinCode)))
+            {
+                customer.Addresses = new List<Address>
+                {
+                    new Address
+                    {
+                        Line1 = customerDto.Address.StreetLine1,
+                        Line2 = customerDto.Address.StreetLine2,
+                        City = customerDto.Address.City,
+                        State = customerDto.Address.State,
+                        PostalCode = customerDto.Address.PinCode
+                    }
+                };
+            }
+
+            return customer;
         }
 
         public static CustomerDto MapToCustomerDto(Customer customer)

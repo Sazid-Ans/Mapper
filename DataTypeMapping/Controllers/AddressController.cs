@@ -1,6 +1,6 @@
-﻿using DataTypeMapping.Dto;
+﻿using AuthServer.Dto.ResponseDto;
+using DataTypeMapping.Dto;
 using DataTypeMapping.Services.Interface;
-using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -20,10 +20,10 @@ namespace DataTypeMapping.Controllers
         }
 
         [HttpPost("CreateAddress")]
-        public IActionResult CreateAddress([FromBody] AddressDto addressDto) 
+        public IActionResult CreateAddress([FromBody] AddressDto addressDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // pulled from JWT
-            var response = _addressService.CreateAddress(addressDto,userId);
+            var response = _addressService.CreateAddress(addressDto, userId);
             if (!response.IsSuccess)
             {
                 return BadRequest(response);
@@ -31,14 +31,15 @@ namespace DataTypeMapping.Controllers
             return Ok(response);
         }
         [HttpDelete("DeleteAddress{id}")]
-        public IActionResult DeleteAddress(int id) 
+        public IActionResult DeleteAddress(int id)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var addressList = _addressService.GetAllAddresses(userId);
             var isAddressPresent = addressList.Data != null && addressList.Data.Any(a => a.AddressID == id);
-            if(!isAddressPresent)
+            if (!isAddressPresent)
             {
-                return BadRequest(BaseResponse<AddressDto>.Failure(new List<string> {"Address not found"}));
+                var error = addressList.Errors.FirstOrDefault();
+                return BadRequest(BaseResponse<AddressDto>.Failure(error.Code , error.Message));
             }
             var response = _addressService.DeleteAddress(id);
             if (!response.IsSuccess)
@@ -47,10 +48,10 @@ namespace DataTypeMapping.Controllers
             }
             return Ok(response);
         }
-        
+
         [HttpGet("GetAddressById/{id}")]
         [AllowAnonymous]
-        public IActionResult GetAddressById(int id) 
+        public IActionResult GetAddressById(int id)
         {
             var response = _addressService.GetAddressById(id);
             if (!response.IsSuccess)
@@ -75,9 +76,9 @@ namespace DataTypeMapping.Controllers
         [HttpPut("UpdateAddress{id}")]
         public IActionResult UpdateAddress(int id, [FromBody] AddressDto addressDto)
         {
-            if(id == 0 || addressDto == null)
+            if (id == 0 || addressDto == null)
             {
-               return BadRequest(BaseResponse<AddressDto>.Failure(new List<string> {"AddressId or Address null"}));
+                return BadRequest(BaseResponse<AddressDto>.Failure("BadRequest","Please check your request and retry."));
             }
             var Baseresponse = _addressService.UpdateAddress(id, addressDto);
             if (!Baseresponse.IsSuccess)

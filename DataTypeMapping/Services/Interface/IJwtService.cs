@@ -1,5 +1,5 @@
-﻿using DataTypeMapping.Dto;
-using DataTypeMapping.Utilities;
+﻿using AuthServer.Dto.ResponseDto;
+using DataTypeMapping.Dto;
 using System.Security.Claims;
 
 namespace DataTypeMapping.Services.Interface

@@ -1,10 +1,14 @@
-﻿using DataTypeMapping.Dto;
+﻿using AuthServer.Dto.ResponseDto;
+using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Model.Enum;
 using DataTypeMapping.Services.Interface;
 using DataTypeMapping.Utilities;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.Data;
+using System.Numerics;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace DataTypeMapping.Services
 {
@@ -27,47 +31,27 @@ namespace DataTypeMapping.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<bool> IsPasswordCorrectAsync(string userEmail , string password)
+        public async Task<BaseResponse<RegistrationResponse>> RegisterAsync(CustomerDto customerDto)
         {
-            var user =await _userManager.FindByEmailAsync(userEmail);
-            return  await _userManager.CheckPasswordAsync(user, password);
-        }
-
-        public async Task<(bool, Customer)> IsUserRegisteredAsync(string userEmail)
-        {
-            var user = await _userManager.FindByEmailAsync(userEmail);
-            return (user != null, user);
-        }
-
-        public async Task<IdentityResult> RegisterAsync(CustomerDto customerDto)
-        {
-            var identityResult = new IdentityResult();
-
             // 1. Check if user already exists
-            var (isRegistered, user) = await IsUserRegisteredAsync(customerDto.Email);
-            if (isRegistered && user != null)
+            var user = await _userManager.FindByEmailAsync(customerDto.Email);
+            if (user is not null)
             {
-                 identityResult = IdentityResult.Failed(
-                    new IdentityError
-                    {
-                        Code = IdentityErrorCode.UserAlreadyExists.ToString(),
-                        Description = "A user with this email already exists."
-                    });
-                return identityResult;
+                return BaseResponse<RegistrationResponse>.Failure(
+                    IdentityErrorCode.UserAlreadyExists.ToString(),"A user with this email already exists.");
             }
 
             // 2. Validate roles
+            if(customerDto.Roles.Count == 0) 
+            {
+                customerDto.Roles.Add("Customer");
+            }
             var rolesToAssign = customerDto.Roles.Distinct().ToList();
             var checkRolesExists = rolesToAssign.All(r => RoleDto.Roles.Contains(r,StringComparer.OrdinalIgnoreCase));
             if(!checkRolesExists) 
             {
-                identityResult = IdentityResult.Failed(
-                   new IdentityError
-                   {
-                       Code = IdentityErrorCode.InvalidRole.ToString(),
-                       Description = "One or more specified roles are invalid."
-                   });
-                return identityResult;
+                return BaseResponse<RegistrationResponse>.Failure(
+                    IdentityErrorCode.InvalidRole.ToString(), "One or more specified roles are invalid.");
             }
             var customer = Mapper.MapToCustomer(customerDto);
 
@@ -79,13 +63,11 @@ namespace DataTypeMapping.Services
                 var userCreateResult = await _userManager.CreateAsync(customer, customerDto.Password);
                 if (!userCreateResult.Succeeded)
                 {
-                    identityResult = IdentityResult.Failed(
-                        new IdentityError
-                        {
-                            Code = "UserCreationFailed",
-                            Description = userCreateResult.Errors.FirstOrDefault()?.Description
-                        });
-                    return identityResult;
+                    await transaction.RollbackAsync();
+
+                    var identityError = userCreateResult.Errors.FirstOrDefault();
+                    return BaseResponse<RegistrationResponse>.Failure(
+                        identityError.Code, identityError.Description) ;
                 }
 
                 // 6. Assign Roles
@@ -95,72 +77,71 @@ namespace DataTypeMapping.Services
                     if (!roleResult.Succeeded)
                     {
                         await transaction.RollbackAsync();
-                        return roleResult;
+                        var identityError = roleResult.Errors.FirstOrDefault();
+
+                    var errorDetail = new List<ErrorDetail>{
+                    new ErrorDetail
+                    {
+                        Code = identityError.Code, Message = identityError.Description
+                    }
+                    };
+                        return BaseResponse<RegistrationResponse>.Failure(
+                            identityError.Code, identityError.Description);
                     }
                 }
 
                 // 7. Commit if everything succeeds
                 await transaction.CommitAsync();
-                return IdentityResult.Success;
+                var registrationResponse = new RegistrationResponse
+                {
+                    UserName = customer.UserName,
+                    UserId = customer.Id,
+                    Roles = rolesToAssign,
+                };
+                return BaseResponse<RegistrationResponse>.Success(registrationResponse);
             }
             catch (Exception ex)
             {
-                // Rollback on exception
-                await transaction.RollbackAsync();
-
-                return IdentityResult.Failed(new IdentityError
-                {
-                    Code = IdentityErrorCode.InternalServerError.ToString(),
-                    Description = $"Unexpected error occurred: {ex.Message}"
-                });
+                transaction.Rollback();
+                return BaseResponse<RegistrationResponse>.Failure(
+                    ex.GetType().Name, ex.Message);
             }
         }
 
-        public async Task<(IdentityResult,string token)> LoginAndGetTokenAsync(string userName, string password) 
+        public async Task<BaseResponse<LoginResponse>> LoginAndGetTokenAsync(string userMail, string password) 
         {
-            IdentityResult identityresult;
-            var (isUserRegistered, user) = await IsUserRegisteredAsync(userName);
-            if (!isUserRegistered && user == null) 
+            var user = await _userManager.FindByEmailAsync(userMail);
+            if (user is not null)
             {
-             identityresult = IdentityResult.Failed(
-                    new IdentityError
-                    {
-                        Code = "UserNotFound",
-                        Description = "User not found."
-                    });
-                return (identityresult, string.Empty);
+                return BaseResponse<LoginResponse>.Failure(
+                    "UserNotFound", $"User not found, entered user {userMail}");
             }
            
            var signInResult = await  _signInManager.CheckPasswordSignInAsync(user, password, false);
            if(!signInResult.Succeeded) 
            {
-               identityresult = IdentityResult.Failed(
-                   new IdentityError
-                   {
-                       Code = "Incorrect password",
-                       Description = "Incorrect password, Please Retry"
-                   });
-               return (identityresult, string.Empty);
+                return BaseResponse<LoginResponse>.Failure(
+                    "Incorrect password", "Incorrect password, Please Retry.");
            }
-           var tokenDto = new TokenDto
-           {
-               UserId = user.Id,
-               UserName = user.Email,
-               Roles = await _userManager.GetRolesAsync(user)
-           };
+            var tokenDto = new TokenDto
+            {
+                UserId = user.Id,
+                UserName = user.Email,
+                Roles = await _userManager.GetRolesAsync(user)
+            };
             var token = _jwtService.GenerateToken(tokenDto);
 
-            SaveUser(user);
-
-            return (IdentityResult.Success, token.Data);
+            return BaseResponse<LoginResponse>.Success(
+                new LoginResponse { JwtToken = token.Data, Username = tokenDto.UserName }
+                );
         }
 
-        public void  SaveUser(Customer user)
+        public void SetCurrentUser(Customer user)
         {
             _httpContextAccessor.HttpContext.Items["User"] = user;
         }
 
-        public Customer FetchUser()
+        public Customer GetCurrentUser()
         {
             if (_httpContextAccessor.HttpContext.Items.TryGetValue("User", out var userObj) && userObj is Customer user)
             {
@@ -170,28 +151,31 @@ namespace DataTypeMapping.Services
         }
 
         public async Task<BaseResponse<string>> UpdatePassword(string userEmail, string currentPassword, string newPassword) 
-        { 
-            var (isUserRegistered, user) = await IsUserRegisteredAsync(userEmail);
-            if (!isUserRegistered && user == null)
+        {
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user is not null)
             {
-                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+                return BaseResponse<string>.Failure(
+                    "UserNotFound", $"User Not Found or entered username: {userEmail} incorrect");
             }
             var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
             if (!result.Succeeded)
             {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return BaseResponse<string>.Failure(errors);
+                var error = result.Errors.Select(e => e).FirstOrDefault();
+                return BaseResponse<string>.Failure(
+                    error.Code , error.Description);
             }
             return BaseResponse<string>.Success("Password updated Successfully");
 
         }
-
+        
         public async Task<BaseResponse<string>> ForgotPassword(string userEmail) 
         {
-            var (isUserRegistered, user) = await IsUserRegisteredAsync(userEmail);
-            if (!isUserRegistered && user == null)
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user is null)
             {
-                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+                return BaseResponse<string>.Failure(
+                     "UserNotFound" , $"User not found, entered User: {userEmail}");
             }
             try
             {
@@ -200,22 +184,25 @@ namespace DataTypeMapping.Services
             }
             catch (Exception ex) 
             {
-                return BaseResponse<string>.Failure(new List<string> { ex.Message });
+                return BaseResponse<string>.Failure(
+                    ex.GetType().Name , ex.Message);
             }
         }
         public async Task<BaseResponse<string>> ResetPassword(string email, string token, string newPassword)
         {
-            var (isUserRegistered, user) = await IsUserRegisteredAsync(email);
-            if (!isUserRegistered || user == null)
+            var user = await _userManager.FindByEmailAsync(email);
+            if (user is null)
             {
-                return BaseResponse<string>.Failure(new List<string> { "User not found" });
+                return BaseResponse<string>.Failure(
+                    "UserNotFound", $"User not found, entered User: {email}");
             }
 
             var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
             if (!result.Succeeded)
             {
-                var errors = result.Errors.Select(e => e.Description).ToList();
-                return BaseResponse<string>.Failure(errors);
+                var error = result.Errors.Select(e => e).FirstOrDefault();
+                return BaseResponse<string>.Failure(
+                    error.Code, error.Description);
             }
 
             return BaseResponse<string>.Success("Password reset successfully");

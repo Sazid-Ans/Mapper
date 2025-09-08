@@ -4,12 +4,13 @@ using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using System.Reflection.Metadata.Ecma335;
 
 namespace DataTypeMapping.Services
 {
     public class MailService : IMailService
     {
-        // MailSettings mailSettings = new MailSettings(); // if we create new object then thn it will be null.
+        // MailSettings mailSettings = new MailSettings(); // if we create new object then it will be null.
         private readonly MailSettings mailSettings;
 
         public MailService(IOptions<MailSettings> options)
@@ -21,14 +22,14 @@ namespace DataTypeMapping.Services
         {
             try
             {
-                var mimeMessage = await CreateMimeMessagesAsync(toEmail, subject, body);
+                var mimeMessage = await CreateMimeMessagesAsync("sazid4294@gmail.com", subject, body);
                 var smtpClient = await CreateSmtpClientAsync(mailSettings.Username, mailSettings.Password);
                 await smtpClient.SendAsync(mimeMessage);
             }
             catch (Exception ex)
             {
                 // Handle exceptions (e.g., log them)
-                Console.WriteLine($"Error sending email: {ex.Message}");
+                throw;
             }
         }
 

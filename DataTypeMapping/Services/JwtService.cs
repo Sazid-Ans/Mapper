@@ -1,9 +1,10 @@
-﻿using DataTypeMapping.Dto;
+﻿using AuthServer.Dto.ResponseDto;
+using DataTypeMapping.Dto;
 using DataTypeMapping.Services.Interface;
-using DataTypeMapping.Utilities;
 using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Newtonsoft.Json.Linq;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -59,22 +60,24 @@ namespace DataTypeMapping.Services
             expires: now.AddMinutes(_options.Value.ExpiryInMinutes),
             signingCredentials: creds
             );
-
+            string token = string.Empty;
             try
             {
-                string token = _jwtHandler.WriteToken(jwt);
-                if (token != null)
+               token  = _jwtHandler.WriteToken(jwt);
+                if (token is null)
                 {
-                    _tokenService.SaveTokenInCookies(token);
-
-                    return BaseResponse<string>.Success(token);
+                    return BaseResponse<string>.Failure(
+                        "JwtError", $"Unknown Error occured while generating jwt");
                 }
             }
             catch (Exception ex)
             {
-                throw new Exception("Error generating token", ex);
+                return BaseResponse<string>.Failure(
+                    "JwtError", $"Error occured while generating jwt, Error: {ex}");
             }
-            return BaseResponse<string>.Failure(new List<string> { "Token generation failed" });
+            _tokenService.SaveTokenInCookies(token);
+
+            return BaseResponse<string>.Success(token);
         }
 
         public string? GetClaimFromToken(string token, string claimType)

@@ -1,8 +1,8 @@
-﻿using DataTypeMapping.Dto;
+﻿using AuthServer.Dto.ResponseDto;
+using DataTypeMapping.Dto;
 using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services.Interface;
-using DataTypeMapping.Utilities;
 
 namespace DataTypeMapping.Services
 {
@@ -15,12 +15,12 @@ namespace DataTypeMapping.Services
             _identityContext = identityContext;
         }
 
-        public BaseResponse<Address> CreateAddress(AddressDto addressDto, string userId)
+        public BaseResponse<AddressResponse> CreateAddress(AddressDto addressDto, string userId)
         {
             if (addressDto  == null) 
             {
-                var error = new List<string> { "Address data is null" };
-                return BaseResponse<Address>.Failure(error);
+                return BaseResponse<AddressResponse>.Failure(
+                    "BadRequest", "Address payload empty.");
             }
             var address = new Address
             {
@@ -33,38 +33,56 @@ namespace DataTypeMapping.Services
             };
             try
             {
-                _identityContext.Add(address);
+                 var addressEntity = _identityContext.Add(address).Entity;
                 _identityContext.SaveChanges();
-                return BaseResponse<Address>.Success(address);
+
+                return BaseResponse<AddressResponse>.Success(new AddressResponse
+                {
+                  Id = addressEntity.AddressID,
+                  UserId  = addressEntity.CustomerId ,
+                  Address = addressEntity.Line1+ addressEntity.Line2 + addressEntity.City + addressEntity.State + addressEntity.PostalCode,
+                }
+                );
             }
             catch (Exception ex)
             {
-                return BaseResponse<Address>.Failure(new List<string> { ex.Message });
+                return BaseResponse<AddressResponse>.Failure(
+                    ex.GetType().Name , ex.Message);
             }
         }
 
-        public BaseResponse<AddressDto> DeleteAddress(int id)
+        public BaseResponse<AddressResponse> DeleteAddress(int id)
         {
             var address = GetAddressById(id);
             var isAdressPresent = address.Data != null && address.IsSuccess == true ;   // to check if address exists
             if(!isAdressPresent)
             {
-                return BaseResponse<AddressDto>.Failure(new List<string> { "Address not found" });
+                return BaseResponse<AddressResponse>.Failure(
+                    "Not Found","Address not found or empty");
             }
-            _identityContext.Addresses.Remove(address.Data);
+           var addressEntity = _identityContext.Addresses.Remove(address.Data).Entity;
             _identityContext.SaveChanges();
-            return BaseResponse<AddressDto>.Success(null);
+            return BaseResponse<AddressResponse>.Success
+                (
+                 new AddressResponse 
+                 {
+                     Id = addressEntity.AddressID,
+                     UserId = addressEntity.CustomerId ,
+                     Address = addressEntity.Line1 + addressEntity.Line2 + addressEntity.City + addressEntity.State + addressEntity.PostalCode,
+                 }
+                );
         }
 
         public BaseResponse<Address> GetAddressById(int id)
         {
             if (id <= 0)
             {
-                var ListError = new List<string> { "Invalid address id" };
-                return BaseResponse<Address>.Failure(ListError);
+                return BaseResponse<Address>.Failure("BadRequest" , "Invalid address id");
             }
             var address = _identityContext.Addresses.Where(a => a.AddressID == id).FirstOrDefault();
-            return address != null ? BaseResponse<Address>.Success(address) : BaseResponse<Address>.Failure(new List<string> { "Address not found" });
+            return address != null ? BaseResponse<Address>.Success(address) 
+                                     : BaseResponse<Address>.Failure("Not Found", "Address does not exists.");
+
         }
 
         public BaseResponse<List<Address>> GetAllAddresses(string userID)
@@ -72,34 +90,45 @@ namespace DataTypeMapping.Services
             var Addresses = _identityContext.Addresses.Where(x => x.CustomerId == userID).ToList();
             if (Addresses == null || Addresses.Count == 0)
             {
-                return BaseResponse<List<Address>>.Failure(new List<string> { "Address count zero" });
+                return BaseResponse<List<Address>>.Failure("Not Found", "No Address Present");
             }
             return BaseResponse<List<Address>>.Success(Addresses);
         }
 
-        public BaseResponse<Address> UpdateAddress(int id, AddressDto addressDto)
+        public BaseResponse<AddressResponse> UpdateAddress(int id, AddressDto addressDto)
         {
-            var address = GetAddressById(id);
-            if (!address.IsSuccess || address.Data == null || addressDto == null)
+            var addressResponse = GetAddressById(id);
+            if (!addressResponse.IsSuccess || addressResponse.Data == null || addressResponse == null)
             {
-                return BaseResponse<Address>.Failure(new List<string> { "Address or Address data not found" });
+                var errors = addressResponse.Errors.FirstOrDefault();
+                return BaseResponse<AddressResponse>.Failure(errors.Code , errors.Message);
             }
             try
             {
-                var AddressEntity = address.Data;
+                var AddressEntity = addressResponse.Data;
                 AddressEntity.Line1 = addressDto.StreetLine1;
                 AddressEntity.Line2 = addressDto.StreetLine2;
                 AddressEntity.City = addressDto.City;
                 AddressEntity.State = addressDto.State;
                 AddressEntity.PostalCode = addressDto.PinCode;
 
-                _identityContext.Addresses.Update(address.Data);
+                var addressEntity = _identityContext.Addresses.Update(addressResponse.Data).Entity;
                 _identityContext.SaveChanges();
-                return BaseResponse<Address>.Success(address.Data);
+                return BaseResponse<AddressResponse>.Success(
+                    new AddressResponse 
+                    {
+                        Id = addressEntity.AddressID,
+                        UserId = addressEntity.CustomerId,
+                        Address = addressEntity.Line1 + addressEntity.Line2 + addressEntity.City + addressEntity.State + addressEntity.PostalCode,
+
+                    }
+                    );
             }
             catch (Exception ex)
             {
-                return BaseResponse<Address>.Failure(new List<string> { ex.Message });
+                return BaseResponse<AddressResponse>.Failure(
+                     "UnExpected Error","Unexpected error occured while updating address"
+                    );
             }
         }
     }

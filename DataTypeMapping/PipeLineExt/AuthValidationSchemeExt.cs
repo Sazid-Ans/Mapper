@@ -1,4 +1,4 @@
-﻿using DataTypeMapping.Utilities;
+﻿using AuthServer.Dto.ResponseDto;
 using DataTypeMapping.Utilities.AppSettingsDO;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -53,7 +53,7 @@ namespace DataTypeMapping.CustMiddleware
                           context.Response.ContentType = "application/json";
 
                           var baseResponse = BaseResponse<string>.Failure(
-                              new List<string> { "You are not authorized to access this resource." } , StatusCodes.Status401Unauthorized.ToString());
+                              "You are not authorized to access this resource." , StatusCodes.Status401Unauthorized.ToString());
 
                           await context.Response.WriteAsJsonAsync(baseResponse);
                       },
@@ -63,7 +63,7 @@ namespace DataTypeMapping.CustMiddleware
                           context.Response.ContentType = "application/json";
 
                           var baseResponse = BaseResponse<string>.Failure(
-                              new List<string> { "You do not have permission to access this resource." }, StatusCodes.Status403Forbidden.ToString());
+                              StatusCodes.Status403Forbidden.ToString(), "You do not have permission to access this resource.");
 
                           await context.Response.WriteAsJsonAsync(baseResponse);
                       }
