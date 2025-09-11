@@ -2,7 +2,7 @@
 
 namespace DataTypeMapping.Model.Context
 {
-    public class MapApiDbContext : Microsoft.EntityFrameworkCore.DbContext
+    public class MapApiDbContext : DbContext
     {
         public MapApiDbContext(DbContextOptions<MapApiDbContext> options)
             : base(options)
