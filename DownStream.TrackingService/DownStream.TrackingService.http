@@ -1,0 +1,6 @@
+@DownStream.TrackingService_HostAddress = http://localhost:5212
+
+GET {{DownStream.TrackingService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

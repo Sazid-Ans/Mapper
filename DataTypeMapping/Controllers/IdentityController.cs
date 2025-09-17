@@ -11,12 +11,15 @@ namespace DataTypeMapping.Controllers
     {
         private readonly IUserService _userService;
         private readonly IMailService _mailService;
+        private readonly ILogger<IdentityController> _logger;
 
-        public IdentityController(IUserService userService, IMailService mailService)
+        public IdentityController(IUserService userService, IMailService mailService, ILogger<IdentityController> logger)
         {
             _userService = userService;
             _mailService = mailService;
+            _logger = logger;
         }
+        
         [HttpPost("Register")]
         [ProducesResponseType(typeof(BaseResponse<RegistrationResponse>),StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(BaseResponse<RegistrationResponse>),StatusCodes.Status400BadRequest)]
@@ -26,21 +29,25 @@ namespace DataTypeMapping.Controllers
             
             try
             {
+                _logger.LogInformation($"Registration Request Recieved. username: {customerDto.Email}");
                 var result = await _userService.RegisterAsync(customerDto);
 
                 if (!result.IsSuccess || result.Data is null)
                 {
+                    _logger.LogError($"Registration failed. Email: {customerDto.Email} , Reason: {result.Errors.FirstOrDefault().Message}");
                     return BadRequest(result);
                 }
                 
-                string message = $"User registration Success username:{customerDto.Email}";
+                string message = $"User registration Success, username:{customerDto.Email}";
+                _logger.LogInformation(message);
                 await _mailService.SendEmailAsync(result.Data.UserId, "Registration Status", message);
 
                 return Ok(result);
             }
             catch (Exception ex)
             {
-                return BaseResponse<RegistrationResponse>.Failure("UnExpected Error", "Something went wrong while registering");
+                _logger.LogError($"Registration failed. Email: {customerDto.Email} , Reason: {ex.Message}");
+                return BaseResponse<RegistrationResponse>.Failure("UnExpected Error", "Something went wrong while Registering");
             }
         }
 

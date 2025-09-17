@@ -4,10 +4,10 @@ using DataTypeMapping.Model;
 using DataTypeMapping.Model.Context;
 using DataTypeMapping.Services;
 using DataTypeMapping.Services.Interface;
-using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using Upstream.Shared.InfraStructure.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +18,16 @@ builder.Services.AddControllers().AddXmlSerializerFormatters();
 builder.Services.AddOpenApi();
 
 var conn = builder.Configuration.GetSection("ConnectionStrings");
+
+
+// Load config from appsettings.json
+builder.Configuration
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+// Setup logging (shared library handles enrichment)
+SerilogSetup.ConfigureSerilog(builder);
 
 //Db context for Api
 builder.Services.AddDbContext<MapApiDbContext>(options => options.UseSqlServer(conn["MapperApiDb"]));
