@@ -22,6 +22,8 @@
 
   <ItemGroup>
     <Folder Include="..Upstream.Shared\InfraStructure\Logging\" />
+    <Folder Include="OrderService.Infra\" />
+    <Folder Include="OrderService.Application\" />
     <Folder Include="OrderService.Domain\" />
   </ItemGroup>
 

@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IntegrationLayer", "Integra
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ApplicationGateway", "ApplicationGateway", "{E72BADB5-4D56-4EF5-9E5C-1E6141E9D12B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Api", "ProductService\ProductService.Api.csproj", "{27B6CCB9-CFA0-4141-8852-082930F7CE57}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService", "ProductService\ProductService.csproj", "{27B6CCB9-CFA0-4141-8852-082930F7CE57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService.Api", "OrderService\OrderService.Api.csproj", "{9C89117B-30B2-4685-A3D8-B8109C571DEA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OrderService", "OrderService\OrderService.csproj", "{9C89117B-30B2-4685-A3D8-B8109C571DEA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UpStream", "UpStream", "{3D7EA01C-EA33-4EBB-95BA-882DC94F1298}"
 EndProject
@@ -21,9 +21,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DownStream", "DownStream", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Upstream.Shared", "Upstream.Shared\Upstream.Shared.csproj", "{1995AD21-95C9-4657-B5D3-0367E034383A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownStream.PaymentService", "DownStream.PaymentService\DownStream.PaymentService.csproj", "{3D9CE89B-6C19-45B6-91FE-E86B2DAFE839}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentService", "DownStream.PaymentService\PaymentService.csproj", "{3D9CE89B-6C19-45B6-91FE-E86B2DAFE839}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownStream.ShippingTrackingService", "DownStream.TrackingService\DownStream.ShippingTrackingService.csproj", "{2FAC7ECE-B610-4EDD-9CFF-B87B20AC6A5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShippingTrackingService", "DownStream.TrackingService\ShippingTrackingService.csproj", "{2FAC7ECE-B610-4EDD-9CFF-B87B20AC6A5E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
