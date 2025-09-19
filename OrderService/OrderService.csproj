@@ -6,6 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="..Upstream.Shared\**" />
+    <Content Remove="..Upstream.Shared\**" />
+    <EmbeddedResource Remove="..Upstream.Shared\**" />
+    <None Remove="..Upstream.Shared\**" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.20" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
@@ -21,7 +28,6 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <Folder Include="..Upstream.Shared\InfraStructure\Logging\" />
     <Folder Include="OrderService.Infra\" />
     <Folder Include="OrderService.Application\" />
     <Folder Include="OrderService.Domain\" />
