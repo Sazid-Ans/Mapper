@@ -8,9 +8,21 @@
 
   <ItemGroup>
     <Compile Remove="..Upstream.Shared\**" />
+    <Compile Remove="OrderService.Application\**" />
+    <Compile Remove="OrderService.Domain\**" />
+    <Compile Remove="OrderService.Infra\**" />
     <Content Remove="..Upstream.Shared\**" />
+    <Content Remove="OrderService.Application\**" />
+    <Content Remove="OrderService.Domain\**" />
+    <Content Remove="OrderService.Infra\**" />
     <EmbeddedResource Remove="..Upstream.Shared\**" />
+    <EmbeddedResource Remove="OrderService.Application\**" />
+    <EmbeddedResource Remove="OrderService.Domain\**" />
+    <EmbeddedResource Remove="OrderService.Infra\**" />
     <None Remove="..Upstream.Shared\**" />
+    <None Remove="OrderService.Application\**" />
+    <None Remove="OrderService.Domain\**" />
+    <None Remove="OrderService.Infra\**" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -26,12 +38,6 @@
 		<PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 	</ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="OrderService.Infra\" />
-    <Folder Include="OrderService.Application\" />
-    <Folder Include="OrderService.Domain\" />
-  </ItemGroup>
 
 	<ItemGroup>
     <ProjectReference Include="..\Upstream.Shared\Upstream.Shared.csproj" />

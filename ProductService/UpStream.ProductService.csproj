@@ -1,0 +1,39 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="ProductService.Application\**" />
+    <Compile Remove="ProductService.Domain\**" />
+    <Compile Remove="ProductService.Infra\**" />
+    <Compile Remove="Serilog\**" />
+    <Content Remove="ProductService.Application\**" />
+    <Content Remove="ProductService.Domain\**" />
+    <Content Remove="ProductService.Infra\**" />
+    <Content Remove="Serilog\**" />
+    <EmbeddedResource Remove="ProductService.Application\**" />
+    <EmbeddedResource Remove="ProductService.Domain\**" />
+    <EmbeddedResource Remove="ProductService.Infra\**" />
+    <EmbeddedResource Remove="Serilog\**" />
+    <None Remove="ProductService.Application\**" />
+    <None Remove="ProductService.Domain\**" />
+    <None Remove="ProductService.Infra\**" />
+    <None Remove="Serilog\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.20">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+	 <PackageReference Include="Serilog.Sinks.Seq" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
